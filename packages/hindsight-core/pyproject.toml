@@ -1,0 +1,22 @@
+[project]
+name = "hindsight-core"
+version = "0.1.0"
+description = "Shared code for the hindsight framework and demos"
+readme = "README.md"
+authors = [
+    { name = "ConlynPattison", email = "conlynrp@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.4.2",
+    "langchain-mcp-adapters>=0.3.2",
+    "langchain-ollama>=1.1.0",
+    "langgraph>=1.2.11",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "hindsight"

@@ -1,0 +1,20 @@
+[project]
+name = "math-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ConlynPattison", email = "conlynrp@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=4.0.8",
+]
+
+[project.scripts]
+math-server = "math_server.main:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
+
