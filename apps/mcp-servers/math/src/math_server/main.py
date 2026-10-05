@@ -1,6 +1,7 @@
-"""MCP tool server exposing basic arithmetic tools over streamable HTTP.
+"""MCP tool server exposing basic arithmetic tools over stdio.
 
-The baseline tool server for the MCP-enabled agent demo.
+The baseline tool server for the MCP-enabled agent demo, which spawns this server as a
+subprocess rather than connecting to a running one.
 """
 
 from fastmcp import FastMCP
@@ -23,7 +24,11 @@ def multiply(a: int, b: int) -> int:
 
 
 def main() -> None:
-    """Serve the tools until interrupted."""
-    # fastmcp's default host, port and path: http://127.0.0.1:8000/mcp, which
-    # mcp-enabled-agent connects to.
-    server.run(transport="http")
+    """Serve the tools on stdin/stdout until the client closes the connection."""
+    # stdio keeps the transport private to the spawning client: no port is opened, so the
+    # tools are not reachable by anything else on the host.
+    #
+    # The banner and startup logs go to stderr, which a client spawning this server inherits,
+    # so they surface in the client's terminal and bury its output. Silence both: under stdio
+    # there is no human watching this process.
+    server.run(transport="stdio", show_banner=False, log_level="WARNING")
