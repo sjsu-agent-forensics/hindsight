@@ -4,9 +4,9 @@ Post-execution forensics framework for compromised LLM-based agent systems.
 
 The demos under `demos/` are the baseline the framework builds on: a LangGraph ReAct agent
 (`react-agent`) and an agent that reaches its tools over MCP (`mcp-enabled-agent`). The MCP tool
-server it calls (`math-server`) lives under `apps/mcp-servers/`. These were moved here from the
-earlier `agency` prototype repo. The demos use a local Ollama model (`gemma4` at `http://localhost:11434` by default; see
-`hindsight.llm.get_llm`).
+servers it calls (`math-server`, `weather-server`) live under `apps/mcp-servers/`. These were moved
+here from the earlier `agency` prototype repo. The demos use a local Ollama model (`llama3.2:3b` at
+`http://localhost:11434` by default; see `hindsight.llm.get_llm`).
 
 ## Layout
 
@@ -65,43 +65,56 @@ uv run --package react-agent react-agent
 uv run --package mcp-enabled-agent mcp-enabled-agent
 ```
 
-`mcp-enabled-agent` needs `math-server` running first (see below).
+`mcp-enabled-agent` also needs its tool servers set up, and `weather-server` running (see
+below).
 
-## Running the math server
+## Running the tool servers
 
-`math-server` is the exception -- MCP servers are not workspace members (see below), so it takes
-`--project` rather than `--package`, and needs its own one-time setup:
+MCP servers are not workspace members (see below), so they take `--project` rather than `--package`,
+and each needs its own one-time setup:
 
 ```bash
 uv sync --project apps/mcp-servers/math
+uv sync --project apps/mcp-servers/weather
 ```
 
-It serves MCP over streamable HTTP at `http://127.0.0.1:8000/mcp` (fastmcp's default host, port and
-path) and runs until you stop it. Start it in its own terminal:
+The two use different transports, which is what decides whether you start them by hand:
+
+| server           | transport | address                          | started by      |
+| ---------------- | --------- | -------------------------------- | --------------- |
+| `math-server`    | stdio     | none -- stdin/stdout             | the demo        |
+| `weather-server` | http      | `http://127.0.0.1:8001/api/mcp`  | you, beforehand |
+
+`math-server` speaks stdio, so `mcp-enabled-agent` spawns it as a subprocess and you never start it
+yourself. It launches the console script out of that server's own `.venv`, which is what keeps the
+two incompatible `mcp` versions apart, so the `uv sync` above is what makes it work.
+
+`weather-server` listens on a port and runs until you stop it, so start it in its own terminal
+before the demo:
 
 ```bash
-uv run --project apps/mcp-servers/math math-server     # Ctrl-C to quit
+uv run --project apps/mcp-servers/weather weather-server   # Ctrl-C to quit
 ```
 
-`mcp-enabled-agent` connects to that URL rather than spawning the server, so start the server
-first, then run the agent from a second terminal:
+Then run the agent from a second terminal:
 
 ```bash
 uv run --package mcp-enabled-agent mcp-enabled-agent
 ```
 
-Only one process can hold port 8000; if the server fails with `error while attempting to bind`,
+Only one process can hold port 8001; if the server fails with `error while attempting to bind`,
 another copy is already running.
 
-To call it without the agent, point the `fastmcp` CLI at the running server's URL:
+To call a running HTTP server without the agent, point the `fastmcp` CLI at its URL:
 
 ```bash
-uv run --project apps/mcp-servers/math fastmcp call http://127.0.0.1:8000/mcp multiply '{"a": 8, "b": 12}'
+uv run --project apps/mcp-servers/weather fastmcp call http://127.0.0.1:8001/api/mcp weather_san_jose '{}'
 ```
 
-Or point the CLI at the server file instead, which needs no running server. The CLI imports the
-module, auto-detects the server object and runs its own copy over stdio -- `main()` and its HTTP
-transport are bypassed, so each command is self-contained. Point it at the module, not the console
+Or point the CLI at a server file instead, which needs no running server -- this is the only way
+to poke at `math-server`, since it has no address of its own. The CLI imports the module,
+auto-detects the server object and runs its own copy over stdio, bypassing `main()` and whatever
+transport it configures, so each command is self-contained. Point it at the module, not the console
 script:
 
 ```bash
@@ -130,18 +143,21 @@ not hold.
 The two sides need incompatible majors of `mcp`, and a workspace resolves to a single set of
 versions:
 
-| package                                             | requires             |
-| --------------------------------------------------- | -------------------- |
-| `math-server` -> `fastmcp>=4.0.8` -> `fastmcp-slim` | `mcp>=2.0.0`         |
-| `hindsight-core` -> `langchain-mcp-adapters`        | `mcp>=1.24.0,<2.0.0` |
+| package                                                   | requires             |
+| --------------------------------------------------------- | -------------------- |
+| `math-server`, `weather-server` -> `fastmcp>=4.0.8`       | `mcp>=2.0.0`         |
+| `hindsight-core` -> `langchain-mcp-adapters`              | `mcp>=1.24.0,<2.0.0` |
 
 mcp 2.x renamed `FastMCP` to `MCPServer` and dropped `mcp.server.fastmcp`, which
 `langchain-mcp-adapters` imports; there is no release of it that supports mcp 2.x. Keeping both
 means keeping two environments.
 
-This costs less than it sounds like. The server runs as its own process and the agent talks to it
-over HTTP, so the two never share an interpreter at runtime. The workspace was the only thing
-forcing them into one resolution.
+This costs less than it sounds like. Each server runs as its own process out of its own `.venv`,
+so the two never share an interpreter at runtime -- whether the agent reaches it over HTTP or spawns
+it over stdio. For a stdio server this is why the client must launch that server's console script by
+path rather than a bare `python`: a bare `python` would resolve to the workspace environment, where
+`fastmcp` is not installed and cannot be. The workspace was the only thing forcing them into one
+resolution.
 
 Two consequences worth knowing:
 
