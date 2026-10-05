@@ -1,13 +1,14 @@
 """Chat model factory."""
 
 from langchain_ollama import ChatOllama
+from langchain.chat_models import BaseChatModel
 
 
 def get_llm(
-    model: str = "gemma4",
+    model: str = "llama3.2:3b",
     base_url: str = "http://localhost:11434",
     reasoning: bool | None = False,
-) -> ChatOllama:
+) -> BaseChatModel:
     """Create a chat model served by Ollama.
 
     Args:
