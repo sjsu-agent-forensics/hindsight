@@ -1,0 +1,8 @@
+# Upstream MCP servers the interposer fronts, each served at /mcp/<name>.
+#
+# A server sets either `url` (a remote server reached over streamable HTTP) or `command`
+# and optional `args` (a local server spawned over stdio). The gateway refuses stdio
+# servers until per-session process management is added, so math-server is not listed yet.
+
+[servers.weather]
+url = "http://127.0.0.1:8001/api/mcp"

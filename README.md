@@ -14,10 +14,15 @@ A [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): one l
 virtual environment at the root, shared by every member.
 
 ```
+apps/agent/                the ReAct agent hindsight protects; all its tools go through the interposer
+apps/interposer/           MCP gateway between the agent and its tool servers
 apps/mcp-servers/          one directory per MCP tool server, each its own project (not members)
-packages/hindsight-core/   code shared by the demos (imported as `hindsight`)
+packages/hindsight-core/   code shared by the apps and demos (imported as `hindsight`)
 demos/                     one directory per demo, each its own package
 ```
+
+`apps/agent` and `apps/interposer` are workspace members, listed by name in the root
+`pyproject.toml`.
 
 ### Planned structure
 
@@ -67,6 +72,19 @@ uv run --package mcp-enabled-agent mcp-enabled-agent
 
 `mcp-enabled-agent` also needs its tool servers set up, and `weather-server` running (see
 below).
+
+## Running the agent
+
+The agent in `apps/agent` reaches its tools only through the interposer. Start the tool servers it
+uses (see below), then the interposer and the agent, each in its own terminal:
+
+```bash
+uv run --project apps/mcp-servers/weather weather-server   # http://127.0.0.1:8001/api/mcp
+uv run --package interposer interposer                     # http://127.0.0.1:8000/mcp/<name>
+uv run --package agent agent                               # chat; "exit" or "quit" to stop
+```
+
+See `apps/agent/README.md` and `apps/interposer/README.md` for options and the interposer's checks.
 
 ## Running the tool servers
 

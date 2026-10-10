@@ -1,0 +1,5 @@
+# MCP servers the agent uses, one entry per server. Every URL points at the interposer
+# (apps/interposer), never at a tool server directly, so every tool call is mediated.
+
+[servers.weather]
+url = "http://127.0.0.1:8000/mcp/weather"
