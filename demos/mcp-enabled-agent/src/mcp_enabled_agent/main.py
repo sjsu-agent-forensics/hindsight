@@ -8,6 +8,7 @@ port and must already be running -- see demos/mcp-enabled-agent/README.md.
 
 import asyncio
 import logging
+import sys
 from pathlib import Path
 
 from hindsight.llm import get_llm
@@ -22,8 +23,10 @@ logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(mes
 # excluded from the workspace and installed in its own .venv -- see "The MCP server exception" in
 # the root README.md. Launching its console script directly is what keeps the two sets of
 # dependencies apart; this demo's own interpreter has no fastmcp and cannot be given one.
+# uv puts console scripts in .venv/Scripts on Windows and .venv/bin elsewhere.
+_VENV_BIN = "Scripts" if sys.platform == "win32" else "bin"
 _MATH_SERVER = (
-    Path(__file__).resolve().parents[4] / "apps/mcp-servers/math/.venv/bin/math-server"
+    Path(__file__).resolve().parents[4] / "apps/mcp-servers/math/.venv" / _VENV_BIN / "math-server"
 )
 
 client = MultiServerMCPClient(
