@@ -1,0 +1,25 @@
+[project]
+name = "clock-server"
+version = "0.1.0"
+description = "Internal MCP tool server returning a fixed scenario date and time"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=4.0.8",
+    "hindsight-server-kit",
+]
+
+[project.scripts]
+clock-server = "clock_server.main:main"
+
+[tool.uv.sources]
+hindsight-server-kit = { path = "../kit", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"

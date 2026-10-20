@@ -43,6 +43,14 @@ client = MultiServerMCPClient(
             "url": "http://127.0.0.1:8001/api/mcp",
             "transport": "http",
         },
+        "records": {
+            "url": "http://127.0.0.1:8011/api/mcp",
+            "transport": "http",
+        },
+        "clock": {
+            "url": "http://127.0.0.1:8015/api/mcp", 
+            "transport": "http",
+        },
     }
 )
 
@@ -56,7 +64,7 @@ async def _run() -> None:
     tools = await client.get_tools()
     agent = create_agent(get_llm(), tools)
     math_response = await agent.ainvoke(
-        {"messages": "What's (3 + 5) x 12? What's the weather in San Jose?"}
+        {"messages": "What's (3 + 5) x 12? What's the weather in San Jose? What is the current time? What is customer c_001's email?"}
     )
     print(math_response["messages"][-1].content)
 

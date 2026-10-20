@@ -1,0 +1,21 @@
+[project]
+name = "hindsight-server-kit"
+version = "0.1.0"
+description = "Session handling, control endpoint and effect log shared by the internal MCP tool servers"
+readme = "README.md"
+requires-python = ">=3.12"
+# fastmcp only: the servers that import this kit need mcp 2.x, so it must never depend on
+# hindsight-core (mcp<2) -- see "The MCP server exception" in the root README.md. starlette and
+# uvicorn come in with fastmcp.
+dependencies = [
+    "fastmcp>=4.0.8",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"

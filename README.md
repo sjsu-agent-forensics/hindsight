@@ -76,6 +76,8 @@ and each needs its own one-time setup:
 ```bash
 uv sync --project apps/mcp-servers/math
 uv sync --project apps/mcp-servers/weather
+uv sync --project apps/mcp-servers/records
+uv sync --project apps/mcp-servers/clock
 ```
 
 The two use different transports, which is what decides whether you start them by hand:
@@ -84,6 +86,16 @@ The two use different transports, which is what decides whether you start them b
 | ---------------- | --------- | -------------------------------- | --------------- |
 | `math-server`    | stdio     | none -- stdin/stdout             | the demo        |
 | `weather-server` | http      | `http://127.0.0.1:8001/api/mcp`  | you, beforehand |
+| `records-server` | http      | `http://127.0.0.1:8011/api/mcp`  | you, beforehand |
+| `clock-server`   | http      | `http://127.0.0.1:8015/api/mcp`  | you, beforehand |
+
+`records` and `clock` are the first internal servers, built on the shared
+`hindsight-server-kit` (`apps/mcp-servers/kit/`, a library, not a server). Each keeps its data per
+session, picked by a `Hindsight-Session` request header, and also serves a control endpoint on its
+MCP port plus 100 (8111, 8115) for seeding, reading back and discarding sessions. A request with no
+header uses one default state, so the `fastmcp` commands below work on them unchanged. See
+`apps/mcp-servers/kit/README.md`. Run each server's tests with
+`uv run --project apps/mcp-servers/<name> pytest apps/mcp-servers/<name>`.
 
 `math-server` speaks stdio, so `mcp-enabled-agent` spawns it as a subprocess and you never start it
 yourself. It launches the console script out of that server's own `.venv`, which is what keeps the
