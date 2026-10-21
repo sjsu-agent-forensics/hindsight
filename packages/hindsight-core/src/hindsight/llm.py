@@ -5,7 +5,7 @@ from langchain.chat_models import BaseChatModel
 
 
 def get_llm(
-    model: str = "llama3.2:3b",
+    model: str = "qwen3:4b",
     base_url: str = "http://localhost:11434",
     reasoning: bool | None = False,
 ) -> BaseChatModel:
