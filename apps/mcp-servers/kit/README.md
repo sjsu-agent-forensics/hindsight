@@ -1,7 +1,7 @@
 # hindsight-server-kit
 
-Library shared by the internal MCP tool servers (`records`, `clock`, and the rest as they land). It
-is not a server and runs nothing on its own. It owns:
+Library shared by the internal MCP tool servers (`records`, `email`, `web`, `files`, `clock`,
+`messaging` and `calendar`). It is not a server and runs nothing on its own. It owns:
 
 - **Session routing.** `store.get()` returns the state of the session named by the
   `Hindsight-Session` request header. A header naming a session that was never seeded is an MCP
@@ -50,8 +50,20 @@ def main() -> None:
 ```
 
 `load_fixture(path)` gets the session's fixture file, or `None` for the benign default, and returns
-whatever the tools read from `session.data`. Sync tools run on worker threads; take
-`session.lock` around anything that reads and then writes.
+whatever the tools read from `session.data`. Servers whose data is JSON can use
+`load_json_fixture(path, benign)`, which also understands overlays: a fixture with
+`"base": "benign"` starts from the benign fixture, appends the items under `add`, and replaces
+fields on the items named under `patch` (found by their `*_id` field anywhere in the data), so an
+overlay lists only what it changes:
+
+```json
+{"base": "benign", "patch": {"w_001": {"text": "updated page text"}}}
+```
+
+`next_id(items, "email_id", "e_")` gives the id for a new item, based only on what is already in
+the session, so a rerun assigns the same ids.
+
+Sync tools run on worker threads; take `session.lock` around anything that reads and then writes.
 
 Each server lists the kit as a path dependency in its own `pyproject.toml`:
 

@@ -7,6 +7,7 @@ log, and the manifest export; each server owns only its tools and its fixture lo
 """
 
 from hindsight_server_kit.control import control_app
+from hindsight_server_kit.fixtures import apply_overlay, find_item, load_json_fixture, next_id
 from hindsight_server_kit.manifest import manifest
 from hindsight_server_kit.serve import CONTROL_PORT_OFFSET, MCP_PATH, serve
 from hindsight_server_kit.session import (
@@ -26,8 +27,12 @@ __all__ = [
     "SESSION_HEADER",
     "Session",
     "SessionStore",
+    "apply_overlay",
     "control_app",
+    "find_item",
+    "load_json_fixture",
     "manifest",
+    "next_id",
     "read_json",
     "serve",
 ]

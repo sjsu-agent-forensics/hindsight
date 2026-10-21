@@ -105,10 +105,10 @@ def test_reseeding_resets_and_reruns_identically(live):
 
 
 def test_scenario_id_resolves_to_this_servers_file(live, tmp_path, monkeypatch):
-    (tmp_path / "attack-1").mkdir()
-    (tmp_path / "attack-1" / "counter.json").write_text('{"start": 100}', encoding="utf-8")
+    (tmp_path / "scenario-1").mkdir()
+    (tmp_path / "scenario-1" / "counter.json").write_text('{"start": 100}', encoding="utf-8")
     monkeypatch.setenv("HINDSIGHT_SCENARIOS", str(tmp_path))
-    live.seed("s-scenario", scenario="attack-1")
+    live.seed("s-scenario", scenario="scenario-1")
     assert call(live.client("s-scenario"), "bump") == {"count": 101}
     # A scenario with no file for this server leaves it on the benign fixture.
     live.seed("s-other", scenario="does-not-touch-counter")

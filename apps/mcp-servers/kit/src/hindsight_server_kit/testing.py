@@ -4,6 +4,7 @@ The in-memory fastmcp client cannot send request headers, so session handling ca
 tested through a real HTTP connection.
 """
 
+import asyncio
 import socket
 import threading
 import time
@@ -33,6 +34,12 @@ class RunningServer:
         """Return an MCP client, sending `session` as the session header if given."""
         headers = {SESSION_HEADER: session} if session else {}
         return Client(StreamableHttpTransport(self.mcp_url, headers=headers))
+
+    def call(
+        self, tool: str, args: dict[str, Any] | None = None, session: str | None = None
+    ) -> Any:
+        """Call `tool` over HTTP, as `session` if given, and return its structured result."""
+        return call(self.client(session), tool, args)
 
     def seed(self, session: str, **spec: Any) -> dict[str, Any]:
         """Seed (or reset) `session` through the control endpoint."""
@@ -78,6 +85,16 @@ def running(server: FastMCP, store: SessionStore) -> Iterator[RunningServer]:
             s.should_exit = True
         for t in threads:
             t.join(timeout=10)
+
+
+def call(client: Client, tool: str, args: dict[str, Any] | None = None) -> Any:
+    """Open `client`, call `tool` and return its structured result; a tool error raises ToolError."""
+
+    async def go():
+        async with client:
+            return (await client.call_tool(tool, args or {})).structured_content
+
+    return asyncio.run(go())
 
 
 def _free_port() -> int:

@@ -54,7 +54,7 @@ class Session:
     def record_effect(self, tool: str, **details: Any) -> dict[str, Any]:
         """Append what a call changed to this session's effect log and return the entry.
 
-        The log is append-only. It is the ground truth for whether an attack's action happened,
+        The log is append-only. It is the ground truth for what the agent's calls changed,
         and what the orchestrator reads back after the run (E-03).
         """
         effect = {"seq": len(self.effects) + 1, "tool": tool, "at": self.now.isoformat(), **details}
