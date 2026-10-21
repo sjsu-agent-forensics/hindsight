@@ -2,7 +2,9 @@
 
 import argparse
 import asyncio
+import contextlib
 import json
+import signal
 import sys
 
 import uvicorn
@@ -21,8 +23,8 @@ CONTROL_PORT_OFFSET = 100
 def serve(server: FastMCP, store: SessionStore, *, port: int, host: str = "127.0.0.1") -> None:
     """Parse the command line, then serve until interrupted, or print the manifest and exit.
 
-    Binds 127.0.0.1 by default, unlike weather-server: these servers hold the confidential test
-    data, and the interposer refuses anything but local HTTP upstreams anyway.
+    Binds 127.0.0.1 by default: these servers hold the confidential test data, and the
+    interposer refuses anything but local HTTP upstreams anyway.
     """
     parser = argparse.ArgumentParser(prog=f"{store.name}-server", description=server.name)
     parser.add_argument("--manifest", action="store_true", help="print tools/list as JSON and exit")
@@ -46,23 +48,48 @@ def serve(server: FastMCP, store: SessionStore, *, port: int, host: str = "127.0
         pass
 
 
+class _Server(uvicorn.Server):
+    """A uvicorn server that leaves signal handling to `_serve_both`.
+
+    Each uvicorn server normally takes over Ctrl-C while it runs and re-raises it when it stops.
+    With two in one process, that re-raised signal lands in the other one's shutdown and prints
+    a traceback, so both get one shared handler instead.
+    """
+
+    @contextlib.contextmanager
+    def capture_signals(self):
+        yield
+
+
 async def _serve_both(
     server: FastMCP, store: SessionStore, host: str, port: int, control_port: int
 ) -> None:
     servers = [
-        uvicorn.Server(uvicorn.Config(app, host=host, port=p, log_level="warning"))
+        _Server(uvicorn.Config(app, host=host, port=p, log_level="warning"))
         for app, p in (
             (server.http_app(path=MCP_PATH), port),
             (control_app(store), control_port),
         )
     ]
-    tasks = [asyncio.create_task(_run(s)) for s in servers]
-    # Each uvicorn server takes over Ctrl-C while it runs, so only one of them sees it. When
-    # either stops, for that or because its port was taken, stop the other one too.
-    await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-    for s in servers:
-        s.should_exit = True
-    await asyncio.gather(*tasks, return_exceptions=True)
+
+    def stop(signum, frame) -> None:
+        # The first Ctrl-C shuts down cleanly; a second one stops waiting for open connections.
+        for s in servers:
+            if s.should_exit:
+                s.force_exit = True
+            s.should_exit = True
+
+    previous = {sig: signal.signal(sig, stop) for sig in (signal.SIGINT, signal.SIGTERM)}
+    try:
+        tasks = [asyncio.create_task(_run(s)) for s in servers]
+        # When either stops, because of a signal or because its port was taken, stop the other.
+        await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        for s in servers:
+            s.should_exit = True
+        await asyncio.gather(*tasks, return_exceptions=True)
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
     if any(not s.started for s in servers):
         sys.exit(f"{store.name}-server: could not start; is another copy already running?")
 

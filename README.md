@@ -101,6 +101,17 @@ header uses one default state, so the `fastmcp` commands below work on them unch
 yourself. It launches the console script out of that server's own `.venv`, which is what keeps the
 two incompatible `mcp` versions apart, so the `uv sync` above is what makes it work.
 
+To start every HTTP server at once, in one terminal, run the launcher from the repo root. It waits
+until each server is listening, prints their addresses, and stops them all on Ctrl-C:
+
+```bash
+python scripts/launch_servers.py                 # weather, records and clock
+python scripts/launch_servers.py records clock   # only these
+```
+
+It needs only the standard library, and `uv run` inside it syncs each server's `.venv` on first
+start. Add each new internal server to `SERVERS` in the script. To start one server by hand instead:
+
 `weather-server` listens on a port and runs until you stop it, so start it in its own terminal
 before the demo:
 
