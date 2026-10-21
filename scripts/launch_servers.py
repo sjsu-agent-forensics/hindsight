@@ -43,11 +43,16 @@ class Server:
         return [self.port] + ([self.control_port] if self.control_port else [])
 
 
-# Add each new internal server here, with the port from the internal tools plan.
+# Every HTTP server, with its port from the internal tools plan. Add new servers here.
 SERVERS = [
     Server("weather", 8001),
     Server("records", 8011, 8111),
+    Server("email", 8012, 8112),
+    Server("web", 8013, 8113),
+    Server("files", 8014, 8114),
     Server("clock", 8015, 8115),
+    Server("messaging", 8016, 8116),
+    Server("calendar", 8017, 8117),
 ]
 
 

@@ -1,0 +1,25 @@
+[project]
+name = "messaging-server"
+version = "0.1.0"
+description = "Internal MCP tool server for team chat channels and direct messages"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=4.0.8",
+    "hindsight-server-kit",
+]
+
+[project.scripts]
+messaging-server = "messaging_server.main:main"
+
+[tool.uv.sources]
+hindsight-server-kit = { path = "../kit", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"

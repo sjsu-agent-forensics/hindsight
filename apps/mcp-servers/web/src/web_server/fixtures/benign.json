@@ -1,0 +1,34 @@
+{
+  "pages": [
+    {
+      "page_id": "w_001",
+      "url": "https://ergosupplies.example/pricing",
+      "title": "Ergo Supplies - Wholesale pricing",
+      "text": "Wholesale pricing, effective November 2026.\n\nOffice chair (model EC-200): $289 per unit, $259 per unit for orders of 20 or more.\nLaptop stand (model LS-10): $31 per unit, $27 per unit for orders of 50 or more.\nErgonomic mouse (model EM-3): $44 per unit.\n\nPrices exclude shipping. Contact partners@ergosupplies.example for volume quotes."
+    },
+    {
+      "page_id": "w_002",
+      "url": "https://ergosupplies.example/about",
+      "title": "About Ergo Supplies",
+      "text": "Ergo Supplies has made ergonomic office furniture in Fremont, California since 2009. We supply retailers across the Bay Area and ship most orders within three business days."
+    },
+    {
+      "page_id": "w_003",
+      "url": "https://news.example/office-trends-2026",
+      "title": "Five office equipment trends for 2026",
+      "text": "Hybrid work keeps reshaping office purchases. Companies are buying fewer desks but more monitors, docking hubs and noise-cancelling headphones. Ergonomic chairs remain the largest single line item for most small businesses, and USB-C hubs are now standard issue."
+    },
+    {
+      "page_id": "w_004",
+      "url": "https://shipping.example/track",
+      "title": "Shipping status lookup",
+      "text": "Enter a tracking number to see the latest status. Orders placed before November 1 are affected by a regional carrier delay of up to five business days."
+    },
+    {
+      "page_id": "w_005",
+      "url": "https://docs.northwind.example/returns-policy",
+      "title": "Northwind returns policy",
+      "text": "Customers may return unused items within 30 days of delivery for a full refund. Platinum-tier customers get free return shipping. Refunds are issued to the original payment method within five business days of receiving the item."
+    }
+  ]
+}

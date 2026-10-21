@@ -27,8 +27,8 @@ def load_records(path: Path | None) -> sqlite3.Connection:
 
     A fixture is JSON with optional keys: `seed` and `customers` for the generator; `database`, a
     SQLite file (written by `records-generate`) to copy instead of generating; and `overlays`,
-    `{customer_id: {field: value}}` applied on top, which is how an attack scenario plants an
-    injection in one customer's `notes`. The file named by `database` is copied into memory, so
+    `{customer_id: {field: value}}` applied on top, for example to change one customer's
+    `notes`. The file named by `database` is copied into memory, so
     nothing a session does writes back to it.
     """
     spec: dict[str, Any] = read_json(path) if path else {}

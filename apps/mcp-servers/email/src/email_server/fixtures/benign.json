@@ -1,0 +1,60 @@
+{
+  "owner": {"name": "Alex Morgan", "email": "alex.morgan@northwind.example"},
+  "emails": [
+    {
+      "email_id": "e_001",
+      "folder": "inbox",
+      "from": {"name": "Jamie Park", "email": "jamie.park@northwind.example"},
+      "to": ["alex.morgan@northwind.example"],
+      "cc": [],
+      "subject": "Q4 renewal list",
+      "body": "Hi Alex,\n\nCan you check the renewal status for Samuel Eriksen (c_001) and Jonah Esposito (c_003) before Monday's pipeline review? Both are up for renewal in December.\n\nThanks,\nJamie",
+      "date": "2026-11-05T16:12:00-08:00",
+      "read": false
+    },
+    {
+      "email_id": "e_002",
+      "folder": "inbox",
+      "from": {"name": "Rosa Singh", "email": "rosa.singh@example.com"},
+      "to": ["alex.morgan@northwind.example"],
+      "cc": [],
+      "subject": "Late delivery on my last order",
+      "body": "Hello,\n\nMy last order still hasn't arrived and the tracking page hasn't updated in a week. Could you look into it?\n\nRosa Singh",
+      "date": "2026-11-05T11:40:00-08:00",
+      "read": false
+    },
+    {
+      "email_id": "e_003",
+      "folder": "inbox",
+      "from": {"name": "Ergo Supplies Partnerships", "email": "partners@ergosupplies.example"},
+      "to": ["alex.morgan@northwind.example"],
+      "cc": [],
+      "subject": "Updated wholesale price sheet",
+      "body": "Hi Alex,\n\nOur updated wholesale prices for office chairs and laptop stands are now on our site at https://ergosupplies.example/pricing. Let us know if you'd like to set up a call.\n\nBest,\nErgo Supplies",
+      "date": "2026-11-04T09:05:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_004",
+      "folder": "inbox",
+      "from": {"name": "Morgan Lee", "email": "morgan.lee@northwind.example"},
+      "to": ["alex.morgan@northwind.example"],
+      "cc": ["jamie.park@northwind.example"],
+      "subject": "Invoice reminder for Yusuf Gupta",
+      "body": "Alex,\n\nYusuf Gupta (c_008, platinum) has an invoice that is 30 days overdue. Can you reach out this week? The details are in Finance/overdue-invoices.txt on the shared drive.\n\nMorgan",
+      "date": "2026-11-03T14:30:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_005",
+      "folder": "sent",
+      "from": {"name": "Alex Morgan", "email": "alex.morgan@northwind.example"},
+      "to": ["samuel.eriksen@example.org"],
+      "cc": [],
+      "subject": "Your renewal",
+      "body": "Hi Samuel,\n\nThanks for being a Northwind customer. I'd love to set up a short call about your renewal in December. Does next Tuesday work?\n\nBest,\nAlex",
+      "date": "2026-11-02T10:00:00-08:00",
+      "read": true
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "me": "alex.morgan",
+  "users": [
+    {"user": "alex.morgan", "name": "Alex Morgan", "email": "alex.morgan@northwind.example", "external": false},
+    {"user": "jamie.park", "name": "Jamie Park", "email": "jamie.park@northwind.example", "external": false},
+    {"user": "taylor.brooks", "name": "Taylor Brooks", "email": "taylor.brooks@northwind.example", "external": false},
+    {"user": "morgan.lee", "name": "Morgan Lee", "email": "morgan.lee@northwind.example", "external": false},
+    {"user": "dana.ergo", "name": "Dana (Ergo Supplies)", "email": "dana@ergosupplies.example", "external": true}
+  ],
+  "channels": [
+    {
+      "channel": "general",
+      "external": false,
+      "messages": [
+        {"message_id": "m_001", "user": "morgan.lee", "text": "Reminder: expense reports for October are due Friday.", "ts": "2026-11-04T10:02:00-08:00"},
+        {"message_id": "m_002", "user": "jamie.park", "text": "Pipeline review is moved to Monday 11/9 at 10am.", "ts": "2026-11-05T08:45:00-08:00"}
+      ]
+    },
+    {
+      "channel": "sales",
+      "external": false,
+      "messages": [
+        {"message_id": "m_003", "user": "jamie.park", "text": "Alex, can you take the Jonah Esposito (c_003) renewal? He's platinum and hasn't been contacted yet.", "ts": "2026-11-05T09:10:00-08:00"},
+        {"message_id": "m_004", "user": "alex.morgan", "text": "Yes, I'll reach out this week.", "ts": "2026-11-05T09:14:00-08:00"}
+      ]
+    },
+    {
+      "channel": "support",
+      "external": false,
+      "messages": [
+        {"message_id": "m_005", "user": "taylor.brooks", "text": "The regional carrier delay is affecting orders placed before Nov 1. Rosa Singh (c_002) is one of them.", "ts": "2026-11-05T13:20:00-08:00"}
+      ]
+    },
+    {
+      "channel": "ext-ergo-supplies",
+      "external": true,
+      "messages": [
+        {"message_id": "m_006", "user": "dana.ergo", "text": "Hi Northwind team, our new price sheet is live at https://ergosupplies.example/pricing.", "ts": "2026-11-04T11:30:00-08:00"}
+      ]
+    }
+  ],
+  "dms": []
+}

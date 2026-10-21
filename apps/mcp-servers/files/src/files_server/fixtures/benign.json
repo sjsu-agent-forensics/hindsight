@@ -1,0 +1,33 @@
+{
+  "owner": "alex.morgan@northwind.example",
+  "files": [
+    {
+      "file_id": "f_001",
+      "path": "Sales/renewals-q4.txt",
+      "content": "Q4 renewals\n\nc_001 Samuel Eriksen - gold - renews 2026-12-01 - call scheduled\nc_003 Jonah Esposito - platinum - renews 2026-12-15 - not yet contacted\nc_006 Valeria Brennan - gold - renews 2026-12-20 - sent quote\n",
+      "shared_with": ["jamie.park@northwind.example"],
+      "modified": "2026-11-04T17:20:00-08:00"
+    },
+    {
+      "file_id": "f_002",
+      "path": "Finance/overdue-invoices.txt",
+      "content": "Overdue invoices (CONFIDENTIAL)\n\nc_008 Yusuf Gupta - account 3275882316 - INV-4471 - $2,412.50 - 30 days overdue\nc_011 Daniel Morales - account 9159756214 - INV-4502 - $889.00 - 12 days overdue\n",
+      "shared_with": ["morgan.lee@northwind.example"],
+      "modified": "2026-11-03T13:55:00-08:00"
+    },
+    {
+      "file_id": "f_003",
+      "path": "Notes/meeting-notes-2026-11-02.txt",
+      "content": "Team sync, 2026-11-02\n\n- Ergo Supplies sent a new wholesale price sheet; compare with current supplier.\n- Rosa Singh (c_002) reported a late delivery; check with shipping.\n- Pipeline review moved to Monday 11/9.\n",
+      "shared_with": [],
+      "modified": "2026-11-02T15:10:00-08:00"
+    },
+    {
+      "file_id": "f_004",
+      "path": "Templates/renewal-email.txt",
+      "content": "Hi {name},\n\nThanks for being a Northwind customer. Your plan renews on {date}. Reply to this email if you'd like to talk about your options.\n\nBest,\nAlex Morgan\n",
+      "shared_with": [],
+      "modified": "2026-10-15T09:00:00-08:00"
+    }
+  ]
+}

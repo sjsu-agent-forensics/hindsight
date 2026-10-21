@@ -77,24 +77,34 @@ and each needs its own one-time setup:
 uv sync --project apps/mcp-servers/math
 uv sync --project apps/mcp-servers/weather
 uv sync --project apps/mcp-servers/records
+uv sync --project apps/mcp-servers/email
+uv sync --project apps/mcp-servers/web
+uv sync --project apps/mcp-servers/files
 uv sync --project apps/mcp-servers/clock
+uv sync --project apps/mcp-servers/messaging
+uv sync --project apps/mcp-servers/calendar
 ```
 
 The two use different transports, which is what decides whether you start them by hand:
 
-| server           | transport | address                          | started by      |
-| ---------------- | --------- | -------------------------------- | --------------- |
-| `math-server`    | stdio     | none -- stdin/stdout             | the demo        |
-| `weather-server` | http      | `http://127.0.0.1:8001/api/mcp`  | you, beforehand |
-| `records-server` | http      | `http://127.0.0.1:8011/api/mcp`  | you, beforehand |
-| `clock-server`   | http      | `http://127.0.0.1:8015/api/mcp`  | you, beforehand |
+| server             | transport | address                         | started by      |
+| ------------------ | --------- | ------------------------------- | --------------- |
+| `math-server`      | stdio     | none -- stdin/stdout            | the demo        |
+| `weather-server`   | http      | `http://127.0.0.1:8001/api/mcp` | you, beforehand |
+| `records-server`   | http      | `http://127.0.0.1:8011/api/mcp` | you, beforehand |
+| `email-server`     | http      | `http://127.0.0.1:8012/api/mcp` | you, beforehand |
+| `web-server`       | http      | `http://127.0.0.1:8013/api/mcp` | you, beforehand |
+| `files-server`     | http      | `http://127.0.0.1:8014/api/mcp` | you, beforehand |
+| `clock-server`     | http      | `http://127.0.0.1:8015/api/mcp` | you, beforehand |
+| `messaging-server` | http      | `http://127.0.0.1:8016/api/mcp` | you, beforehand |
+| `calendar-server`  | http      | `http://127.0.0.1:8017/api/mcp` | you, beforehand |
 
-`records` and `clock` are the first internal servers, built on the shared
-`hindsight-server-kit` (`apps/mcp-servers/kit/`, a library, not a server). Each keeps its data per
-session, picked by a `Hindsight-Session` request header, and also serves a control endpoint on its
-MCP port plus 100 (8111, 8115) for seeding, reading back and discarding sessions. A request with no
-header uses one default state, so the `fastmcp` commands below work on them unchanged. See
-`apps/mcp-servers/kit/README.md`. Run each server's tests with
+The internal servers (`records`, `email`, `web`, `files`, `clock`, `messaging`, `calendar`) are
+built on the shared `hindsight-server-kit` (`apps/mcp-servers/kit/`, a library, not a server).
+Each keeps its data per session, picked by a `Hindsight-Session` request header, and also serves a
+control endpoint on its MCP port plus 100 (8111 to 8117) for seeding, reading back and discarding
+sessions. A request with no header uses one default state, so the `fastmcp` commands below work on
+them unchanged. See `apps/mcp-servers/kit/README.md`. Run each server's tests with
 `uv run --project apps/mcp-servers/<name> pytest apps/mcp-servers/<name>`.
 
 `math-server` speaks stdio, so `mcp-enabled-agent` spawns it as a subprocess and you never start it
@@ -105,7 +115,7 @@ To start every HTTP server at once, in one terminal, run the launcher from the r
 until each server is listening, prints their addresses, and stops them all on Ctrl-C:
 
 ```bash
-python scripts/launch_servers.py                 # weather, records and clock
+python scripts/launch_servers.py                 # every HTTP server
 python scripts/launch_servers.py records clock   # only these
 ```
 
