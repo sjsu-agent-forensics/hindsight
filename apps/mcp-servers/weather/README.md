@@ -19,5 +19,4 @@ It serves at `http://127.0.0.1:8001/api/mcp`, which is the URL `mcp-enabled-agen
 The host, port and path are set explicitly in `main()` rather than left at fastmcp's defaults, so
 that it does not collide with other servers.
 
-Note that it binds `0.0.0.0`, not `127.0.0.1`, so the tools are reachable from other machines on
-the network. Change the `host` argument in `main()` if you want it local-only.
+It binds `127.0.0.1` only, so the tools are not reachable from other machines on the network.
