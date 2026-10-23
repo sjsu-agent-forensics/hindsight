@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 
 [tool.uv.workspace]
-members = ["packages/*", "demos/*", "apps/agent", "apps/interposer"]
+members = ["packages/*", "demos/*", "apps/agent", "apps/interposer", "apps/launcher"]
 # MCP servers need mcp 2.x (fastmcp 4); the rest of the workspace is pinned to mcp 1.x
 # by langchain-mcp-adapters. Each server is its own project with its own .venv -- see the README.
 exclude = ["apps/mcp-servers/*"]

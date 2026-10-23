@@ -72,3 +72,7 @@ async def _chat(agent: CompiledStateGraph) -> None:
         if final_state is not None:
             messages = final_state["messages"]
         print("\n\n---\n")
+
+
+if __name__ == "__main__":
+    main()

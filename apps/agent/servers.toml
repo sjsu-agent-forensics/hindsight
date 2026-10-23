@@ -1,5 +1,9 @@
 # MCP servers the agent uses, one entry per server. Every URL points at the interposer
 # (apps/interposer), never at a tool server directly, so every tool call is mediated.
+#
+# {session_id} is filled in by the launcher (apps/launcher), which registers a session with
+# the interposer and hands the agent a copy of this file with the session's URLs. Run
+# directly, the agent connects with the literal placeholder and is refused at startup.
 
 [servers.weather]
-url = "http://127.0.0.1:8000/mcp/weather"
+url = "http://127.0.0.1:8000/s/{session_id}/mcp/weather"

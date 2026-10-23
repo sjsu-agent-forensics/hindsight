@@ -6,17 +6,23 @@ reached through the interposer (`apps/interposer`), and has no in-process tools,
 interposer cannot see them. It holds one persistent MCP session per server for the whole run.
 
 Its servers are listed in [`servers.toml`](servers.toml), one entry per server, each pointing at
-the interposer's `/mcp/<name>` path.
+the interposer's `/s/{session_id}/mcp/<name>` path. The agent itself knows nothing of hindsight
+sessions: the launcher (`apps/launcher`) registers a session and gives the agent a copy of this
+file with `{session_id}` filled in.
 
 ## Running it
 
-Start the tool servers and the interposer first (see `apps/interposer/README.md`), then:
+Start the tool servers and the interposer first (see `apps/interposer/README.md`), then run the
+agent through the launcher, which passes on any arguments it does not recognize:
 
 ```bash
-uv run --package agent agent                                    # chat; "exit" or "quit" to stop
-uv run --package agent agent "What's the weather in San Jose?"  # answer one prompt and exit
-uv run --package agent agent --provider anthropic --model claude-sonnet-5-5
+uv run --package launcher launcher "What's the weather in San Jose?"
+uv run --package launcher launcher "What's the weather in San Jose?" --provider anthropic --model claude-sonnet-5-5
 ```
 
 `--provider` and `--model` select the chat model (see `hindsight.llm.get_llm`). Anthropic and
 OpenAI read their API keys from `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`.
+
+Run directly (`uv run --package agent agent`), the agent uses the unfilled template, so the
+interposer refuses it at startup. Its chat mode (no prompt argument) works only with a
+`--config` whose URLs name a registered session.

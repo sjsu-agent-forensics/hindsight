@@ -13,6 +13,7 @@ members = [
     "hindsight",
     "hindsight-core",
     "interposer",
+    "launcher",
     "mcp-enabled-agent",
     "react-agent",
 ]
@@ -575,6 +576,7 @@ version = "0.1.0"
 source = { editable = "apps/interposer" }
 dependencies = [
     { name = "anyio" },
+    { name = "httpx" },
     { name = "mcp" },
     { name = "starlette" },
     { name = "uvicorn" },
@@ -583,6 +585,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "anyio", specifier = ">=4.15.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "mcp", specifier = ">=1.24,<2" },
     { name = "starlette", specifier = ">=1.7.0" },
     { name = "uvicorn", specifier = ">=0.53.0" },
@@ -917,6 +920,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/bf/9a/b07aa9c457265e4bd
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e9/61/a61db7922016b77afe212c97744cd8b0aad54430a1d3df23fc792fb963bf/langsmith-0.12.1-py3-none-any.whl", hash = "sha256:34574d4411947f62825e8368fd172cad2505ddfb73bf5d8ed7c0e7a41e4c4879", size = 758328, upload-time = "2026-09-01T17:43:53.319Z" },
 ]
+
+[[package]]
+name = "launcher"
+version = "0.1.0"
+source = { editable = "apps/launcher" }
+dependencies = [
+    { name = "httpx" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "httpx", specifier = ">=0.28.1" }]
 
 [[package]]
 name = "mcp"

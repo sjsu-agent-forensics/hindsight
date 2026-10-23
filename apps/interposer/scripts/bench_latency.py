@@ -1,8 +1,9 @@
 """Measure per-call latency direct to a server and through the interposer.
 
-Phase 1 exit check. Calls one tool repeatedly over a single persistent MCP session to
-each URL and reports the median and 95th percentile, then the median the interposer adds
-per call. The earlier baseline was about 6 ms median per call with a persistent session.
+Phase 1 exit check. Calls one tool repeatedly over a single persistent MCP session,
+direct and through the interposer (in a session registered for the check), and reports
+the median and 95th percentile, then the median the interposer adds per call. The
+earlier baseline was about 6 ms median per call with a persistent session.
 """
 
 import argparse
@@ -12,6 +13,7 @@ import statistics
 import time
 from typing import Any
 
+from _gateway_session import gateway_session
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
@@ -52,9 +54,10 @@ async def _run(args: argparse.Namespace) -> None:
     direct = await _measure(
         args.direct_url, args.tool, arguments, args.calls, args.warmup
     )
-    proxied = await _measure(
-        args.proxy_url, args.tool, arguments, args.calls, args.warmup
-    )
+    async with gateway_session(args.gateway_url, args.server) as proxy_url:
+        proxied = await _measure(
+            proxy_url, args.tool, arguments, args.calls, args.warmup
+        )
     added = statistics.median(proxied) - statistics.median(direct)
     print(f"{args.calls} calls to {args.tool} each, after {args.warmup} warmup calls")
     print(_summary("direct", direct))
@@ -66,7 +69,8 @@ def main() -> None:
     """Benchmark one tool direct and through the interposer."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("direct_url", help="the upstream server's own URL")
-    parser.add_argument("proxy_url", help="the same server through the interposer")
+    parser.add_argument("gateway_url", help="the interposer's base URL")
+    parser.add_argument("server", help="the server's name in the interposer config")
     parser.add_argument("tool", help="name of the tool to call")
     parser.add_argument(
         "--arguments", default="{}", help="tool arguments as JSON (default: {})"
