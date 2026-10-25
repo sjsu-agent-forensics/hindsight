@@ -28,6 +28,13 @@ def main() -> None:
         help="directory for the refused-traffic log (default: %(default)s)",
     )
     parser.add_argument(
+        "--trace-dir",
+        type=Path,
+        default=_APP_DIR.parents[1] / "traces",
+        help="directory for session traces, one subdirectory per session "
+        "(default: %(default)s)",
+    )
+    parser.add_argument(
         "--idle-timeout",
         type=float,
         default=30 * 60,
@@ -41,5 +48,7 @@ def main() -> None:
     logging.basicConfig(
         level=logging.INFO, format="%(levelname)s %(name)s: %(message)s"
     )
-    app = build_app(load_config(args.config), args.log_dir, args.idle_timeout)
+    app = build_app(
+        load_config(args.config), args.log_dir, args.trace_dir, args.idle_timeout
+    )
     uvicorn.run(app, host=args.host, port=args.port)

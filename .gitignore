@@ -220,3 +220,6 @@ __marimo__/
 
 # Interposer runtime logs (refused traffic; session traces later)
 apps/interposer/logs/
+
+# Session traces (proxy and agent)
+traces/

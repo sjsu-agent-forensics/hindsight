@@ -2,7 +2,8 @@
 
 Routes:
 
-- ``POST /sessions``: the launcher registers a session (see ``_parse_registration``).
+- ``POST /sessions``: the launcher registers a session (see ``_parse_registration``) and
+  gets back the directory its trace files go in.
 - ``DELETE /sessions/<session-id>``: the launcher ends a session and gets back its MCP
   session mapping.
 - ``/s/<session-id>/mcp/<server>``: the agent's MCP endpoint for one server in one
@@ -47,6 +48,7 @@ from interposer.sessions import (
     TrustedInput,
     normalize_session_id,
 )
+from interposer.tracing import ChannelTracer, TraceWriter
 
 logger = logging.getLogger(__name__)
 
@@ -54,12 +56,16 @@ _ALL_METHODS = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 
 
 def build_app(
-    upstreams: dict[str, Upstream], log_dir: Path, idle_timeout: float
+    upstreams: dict[str, Upstream],
+    log_dir: Path,
+    trace_dir: Path,
+    idle_timeout: float,
 ) -> Starlette:
     """Build the gateway app serving every configured upstream server.
 
     Args:
         log_dir: Directory for the refused log (``refused.jsonl``).
+        trace_dir: Directory under which each session gets a directory of trace files.
         idle_timeout: Seconds without a request after which a session the launcher never
             ended is ended.
 
@@ -75,20 +81,23 @@ def build_app(
             )
         http_upstreams[name] = upstream
 
-    registry = SessionRegistry(idle_timeout)
+    trace_writer = TraceWriter(trace_dir)
+    registry = SessionRegistry(idle_timeout, trace_writer)
     refused = RefusedLog(log_dir / "refused.jsonl")
-    launcher_api = _LauncherApi(registry)
+    launcher_api = _LauncherApi(registry, trace_writer)
     mcp_endpoint = _McpEndpoint(http_upstreams, registry, refused)
 
     @asynccontextmanager
     async def lifespan(_app: Starlette) -> AsyncGenerator[None]:
         async with anyio.create_task_group() as tg:
             mcp_endpoint.task_group = tg
+            tg.start_soon(trace_writer.run)
             tg.start_soon(registry.expire_idle)
             try:
                 yield
             finally:
-                # Close every upstream session cleanly before the relays are cancelled.
+                # End every session (closing its upstream sessions and writing out its
+                # trace) before the relays and the trace writer are cancelled.
                 await registry.end_all()
                 tg.cancel_scope.cancel()
 
@@ -112,14 +121,16 @@ def build_app(
 class _LauncherApi:
     """The launcher's endpoints for registering and ending sessions."""
 
-    def __init__(self, registry: SessionRegistry) -> None:
+    def __init__(self, registry: SessionRegistry, trace_writer: TraceWriter) -> None:
         self._registry = registry
+        self._trace_writer = trace_writer
 
     async def register(self, request: Request) -> Response:
         """Register a session from the JSON registration payload.
 
-        Answers 201 with the canonical session ID, 400 for an invalid payload, or 409 if
-        the ID was registered before.
+        Answers 201 with the canonical session ID and the session's trace directory,
+        where the agent's trace belongs too; 400 for an invalid payload; or 409 if the
+        ID was registered before.
         """
         try:
             session_id, trusted_inputs = _parse_registration(await request.json())
@@ -131,7 +142,10 @@ class _LauncherApi:
             return JSONResponse(
                 {"error": f"Session {session_id} was already registered"}, 409
             )
-        return JSONResponse({"session_id": session_id}, 201)
+        trace_dir = self._trace_writer.session_dir(session_id).resolve()
+        return JSONResponse(
+            {"session_id": session_id, "trace_dir": str(trace_dir)}, 201
+        )
 
     async def end(self, request: Request) -> Response:
         """End a session and answer with its summary, including its MCP sessions.
@@ -267,7 +281,8 @@ class _McpEndpoint:
         # Recorded before the opening request is served: the agent sends its next request
         # as soon as it has the session ID, which can be before this request returns.
         session.channels[channel.mcp_session_id] = channel
-        await self.task_group.start(_run_channel, channel, upstream)
+        tracer = ChannelTracer(session.trace, upstream.name, channel.mcp_session_id)
+        await self.task_group.start(_run_channel, channel, upstream, tracer)
 
         status = await _serve_and_report_status(
             transport.handle_request, request.scope, request.receive, send
@@ -287,10 +302,11 @@ class _McpEndpoint:
 async def _run_channel(
     channel: McpChannel,
     upstream: HttpUpstream,
+    tracer: ChannelTracer,
     *,
     task_status: TaskStatus[None] = anyio.TASK_STATUS_IGNORED,
 ) -> None:
-    """Relay one MCP session until either side closes, then mark the channel closed.
+    """Relay and trace one MCP session until either side closes, then mark it closed.
 
     However the relay ends, the agent-facing transport is terminated, so later requests
     with this MCP session ID get 404 rather than reaching a dead relay.
@@ -298,11 +314,16 @@ async def _run_channel(
 
     def record_upstream_session(upstream_session_id: str) -> None:
         channel.upstream_session_id = upstream_session_id
+        tracer.upstream_session_id = upstream_session_id
 
     try:
         async with channel.transport.connect() as (agent_read, agent_write):
             task_status.started()
-            relay = UpstreamRelay(upstream, on_upstream_session=record_upstream_session)
+            relay = UpstreamRelay(
+                upstream,
+                observer=tracer,
+                on_upstream_session=record_upstream_session,
+            )
             await relay.run(agent_read, agent_write)
     finally:
         with anyio.CancelScope(shield=True):

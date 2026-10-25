@@ -1,13 +1,14 @@
 """Relay one agent-facing MCP session to its own persistent upstream session.
 
 Every JSON-RPC message is forwarded as received, in both directions. The relay never
-interprets tool names, descriptors, arguments or results, so what the agent sees is what
-the upstream server sent. Upstream content is untrusted and is passed through, not acted
-on.
+changes tool names, descriptors, arguments or results, so what the agent sees is what
+the upstream server sent. It shows each message to an observer (the tracer) before
+forwarding it. Upstream content is untrusted and is passed through, not acted on.
 """
 
 import logging
 from collections.abc import Callable
+from typing import Protocol
 
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
@@ -28,6 +29,20 @@ from interposer.config import HttpUpstream
 logger = logging.getLogger(__name__)
 
 
+class MessageObserver(Protocol):
+    """Sees every relayed message just before it is forwarded.
+
+    Called on the forwarding path, so it must not block. It cannot change or drop the
+    message.
+    """
+
+    def on_agent_message(self, message: JSONRPCMessage) -> None:
+        """See a message from the agent, before it goes upstream."""
+
+    def on_upstream_message(self, message: JSONRPCMessage) -> None:
+        """See a message from the upstream server, before it goes to the agent."""
+
+
 class UpstreamRelay:
     """Relays one agent-facing MCP session to its own session on one upstream server.
 
@@ -37,14 +52,18 @@ class UpstreamRelay:
     """
 
     def __init__(
-        self, upstream: HttpUpstream, on_upstream_session: Callable[[str], None]
+        self,
+        upstream: HttpUpstream,
+        observer: MessageObserver,
+        on_upstream_session: Callable[[str], None],
     ) -> None:
         """Create a relay to ``upstream``.
 
-        ``on_upstream_session`` is called once with the upstream server's ``Mcp-Session-
-        Id``, as soon as the upstream has issued one.
+        ``on_upstream_session`` is called once with the upstream server's session ID
+        (its ``Mcp-Session-Id``), as soon as the upstream has issued one.
         """
         self._upstream = upstream
+        self._observer = observer
         self._on_upstream_session = on_upstream_session
 
     async def run(
@@ -140,6 +159,7 @@ class UpstreamRelay:
                     continue
                 if isinstance(item.message.root, JSONRPCRequest):
                     pending.add(item.message.root.id)
+                self._observer.on_agent_message(item.message)
                 # A fresh SessionMessage drops the server-side transport metadata, which
                 # means nothing to the upstream client transport.
                 await upstream_write.send(SessionMessage(message=item.message))
@@ -190,6 +210,7 @@ class UpstreamRelay:
                     continue
                 if isinstance(item.message.root, JSONRPCResponse | JSONRPCError):
                     pending.discard(item.message.root.id)
+                self._observer.on_upstream_message(item.message)
                 await agent_write.send(SessionMessage(message=item.message))
         except (anyio.ClosedResourceError, anyio.BrokenResourceError):
             # The agent's side was closed by the gateway; nothing more can reach it.

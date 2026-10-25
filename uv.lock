@@ -16,6 +16,7 @@ members = [
     "launcher",
     "mcp-enabled-agent",
     "react-agent",
+    "trace-schema",
 ]
 
 [[package]]
@@ -28,6 +29,7 @@ dependencies = [
     { name = "langchain-core" },
     { name = "langchain-mcp-adapters" },
     { name = "langgraph" },
+    { name = "trace-schema" },
 ]
 
 [package.metadata]
@@ -37,6 +39,7 @@ requires-dist = [
     { name = "langchain-core", specifier = ">=1.6.9" },
     { name = "langchain-mcp-adapters", specifier = ">=0.3.2" },
     { name = "langgraph", specifier = ">=1.2.11" },
+    { name = "trace-schema", editable = "packages/trace-schema" },
 ]
 
 [[package]]
@@ -579,6 +582,7 @@ dependencies = [
     { name = "httpx" },
     { name = "mcp" },
     { name = "starlette" },
+    { name = "trace-schema" },
     { name = "uvicorn" },
 ]
 
@@ -588,6 +592,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "mcp", specifier = ">=1.24,<2" },
     { name = "starlette", specifier = ">=1.7.0" },
+    { name = "trace-schema", editable = "packages/trace-schema" },
     { name = "uvicorn", specifier = ">=0.53.0" },
 ]
 
@@ -927,10 +932,14 @@ version = "0.1.0"
 source = { editable = "apps/launcher" }
 dependencies = [
     { name = "httpx" },
+    { name = "trace-schema" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "httpx", specifier = ">=0.28.1" }]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "trace-schema", editable = "packages/trace-schema" },
+]
 
 [[package]]
 name = "mcp"
@@ -1713,6 +1722,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c5/84/50966fb6918a0fb9b32721277e5342bf729a2d74350074d662fbedf9772e/tiktoken-0.14.0-cp315-cp315t-musllinux_1_2_x86_64.whl", hash = "sha256:149d97453c4c98c04b081d64a85e635921269b532710d6faf81e9e82b790e7d3", size = 1316673, upload-time = "2026-08-17T19:49:37.756Z" },
     { url = "https://files.pythonhosted.org/packages/35/5e/9b01afd037bfa22a0033963fa091e0f75b6fb15cd85bffb42ff86e697323/tiktoken-0.14.0-cp315-cp315t-win_amd64.whl", hash = "sha256:561e7580f84a79859af1ef6f676968e9030fcc3fe195700b15235bca64f009c9", size = 987929, upload-time = "2026-08-17T19:49:38.947Z" },
 ]
+
+[[package]]
+name = "trace-schema"
+version = "0.1.0"
+source = { editable = "packages/trace-schema" }
 
 [[package]]
 name = "truststore"

@@ -3,11 +3,13 @@
 Runs the agent (`apps/agent`) once under a hindsight session:
 
 1. Generates a session ID and registers it with the interposer (`POST /sessions`), with the
-   user's prompt as the only trusted input.
+   user's prompt as the only trusted input. The interposer answers with the session's trace
+   directory.
 2. Runs the agent on the prompt, with a copy of the agent's `servers.toml` whose `{session_id}`
-   placeholders are replaced by the session ID, so every MCP URL is the session's path.
-3. Ends the session (`DELETE /sessions/<id>`) however the agent exits, and prints the MCP sessions
-   the agent opened.
+   placeholders are replaced by the session ID, so every MCP URL is the session's path. The agent
+   writes its trace to `agent.jsonl` in the trace directory, beside the interposer's `proxy.jsonl`.
+3. Ends the session (`DELETE /sessions/<id>`) however the agent exits, then prints the MCP sessions
+   the agent opened and the trace directory. Both traces are complete by then.
 
 ## Running it
 

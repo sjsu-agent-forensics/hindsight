@@ -19,7 +19,9 @@ apps/interposer/           MCP gateway between the agent and its tool servers
 apps/launcher/             runs the agent once under a hindsight session registered with the interposer
 apps/mcp-servers/          one directory per MCP tool server, each its own project (not members)
 packages/hindsight-core/   code shared by the apps and demos (imported as `hindsight`)
+packages/trace-schema/     trace event format shared by the interposer and the agent
 demos/                     one directory per demo, each its own package
+traces/                    session traces written at runtime, one directory per session (ignored)
 ```
 
 `apps/agent`, `apps/interposer` and `apps/launcher` are workspace members, listed by name in the

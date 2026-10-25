@@ -6,6 +6,8 @@ from langchain_core.tools import BaseTool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools
 
+from agent.telemetry import add_tool_call_meta, stamp_tool_call_id
+
 
 async def open_mcp_tools(
     stack: AsyncExitStack, servers: dict[str, str]
@@ -16,6 +18,9 @@ async def open_mcp_tools(
     reuses it. ``MultiServerMCPClient.get_tools()`` would instead open a fresh session
     per call, which costs far more per call and splits one run across many sessions.
 
+    Every tool call carries the agent's tool-call ID in its ``_meta``, the key that
+    joins the agent trace to the proxy trace (see ``agent.telemetry``).
+
     Tool descriptors and results come from the servers and are untrusted; they are
     passed to the model as they are.
     """
@@ -25,5 +30,8 @@ async def open_mcp_tools(
     tools: list[BaseTool] = []
     for name in servers:
         session = await stack.enter_async_context(client.session(name))
-        tools += await load_mcp_tools(session, server_name=name)
+        add_tool_call_meta(session)
+        tools += await load_mcp_tools(
+            session, server_name=name, tool_interceptors=[stamp_tool_call_id]
+        )
     return tools

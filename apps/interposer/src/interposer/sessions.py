@@ -2,7 +2,8 @@
 
 A hindsight session groups everything one run does. The agent opens one MCP session per
 server path under the session's prefix (``/s/<session-id>/mcp/<server>``), so one
-hindsight session maps to several MCP sessions, which the session records.
+hindsight session maps to several MCP sessions, which the session records. Each session
+has one proxy trace, which is complete once the session has ended.
 """
 
 import logging
@@ -10,11 +11,14 @@ import time
 import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Literal, get_args
 
 import anyio
+import trace_schema as ts
 from mcp.server.streamable_http import StreamableHTTPServerTransport
+
+from interposer.tracing import SessionTrace, TraceWriter
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +72,7 @@ class Session:
 
     id: str
     trusted_inputs: list[TrustedInput]
+    trace: SessionTrace
     channels: dict[str, McpChannel] = field(default_factory=dict)
     ended_by: EndedBy | None = None
     closed: anyio.Event = field(default_factory=anyio.Event)
@@ -93,8 +98,7 @@ class Session:
             self.last_activity = time.monotonic()
 
     def summary(self) -> dict:
-        """Return the session's ID, how it ended, and its MCP sessions grouped by
-        server."""
+        """Return the session's ID, how it ended, and its MCP sessions by server."""
         mcp_sessions: dict[str, list[dict]] = {}
         for channel in self.channels.values():
             mcp_sessions.setdefault(channel.server, []).append(
@@ -129,9 +133,10 @@ class SessionRegistry:
     session rather than an unknown one, and an ID is never registered twice.
     """
 
-    def __init__(self, idle_timeout: float) -> None:
+    def __init__(self, idle_timeout: float, trace_writer: TraceWriter) -> None:
         self._sessions: dict[str, Session] = {}
         self._idle_timeout = idle_timeout
+        self._trace_writer = trace_writer
 
     def register(self, session_id: str, trusted_inputs: list[TrustedInput]) -> Session:
         """Register a new session.
@@ -141,8 +146,17 @@ class SessionRegistry:
         """
         if session_id in self._sessions:
             raise SessionExistsError(session_id)
-        session = Session(id=session_id, trusted_inputs=trusted_inputs)
+        session = Session(
+            id=session_id,
+            trusted_inputs=trusted_inputs,
+            trace=SessionTrace(session_id, self._trace_writer),
+        )
         self._sessions[session_id] = session
+        # Replay rebuilds the trusted-input index entries from this event.
+        session.trace.emit(
+            "registration",
+            {ts.TRUSTED_INPUTS: [asdict(trusted) for trusted in trusted_inputs]},
+        )
         logger.info(
             "Registered session %s with %d trusted inputs",
             session_id,
@@ -151,21 +165,24 @@ class SessionRegistry:
         return session
 
     def lookup(self, session_id: str) -> Session | None:
-        """Return the session with this ID, active or ended, or None if never
-        registered."""
+        """Return the session with this ID, active or ended, or None if unknown."""
         return self._sessions.get(session_id)
 
     async def end(self, session: Session, ended_by: EndedBy) -> None:
-        """End a session and close every MCP session under it.
+        """End a session, close every MCP session under it, and complete its trace.
 
-        Returns once its upstream sessions are closed, or after a timeout if an upstream
-        does not respond. Safe to call more than once and concurrently: the first call
+        Returns once its upstream sessions are closed (or after a timeout if an upstream
+        does not respond) and every trace event is written, so the trace is complete
+        when this returns. Safe to call more than once and concurrently: the first call
         decides ``ended_by``, and every call waits for the same close.
         """
         if session.ended_by is None:
             session.ended_by = ended_by
             logger.info("Ending session %s (%s)", session.id, ended_by)
             await self._close_channels(session)
+            # After the channels: closing them can still produce events.
+            with anyio.CancelScope(shield=True):
+                await self._trace_writer.flush()
             session.closed.set()
         await session.closed.wait()
 

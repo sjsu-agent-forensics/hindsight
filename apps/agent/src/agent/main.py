@@ -14,6 +14,7 @@ from langgraph.graph.state import CompiledStateGraph
 
 from agent.config import load_servers
 from agent.console import stream_turn
+from agent.telemetry import AgentTrace, TraceMiddleware
 from agent.tools import open_mcp_tools
 
 _DEFAULT_CONFIG = Path(__file__).resolve().parents[2] / "servers.toml"
@@ -33,7 +34,14 @@ def main() -> None:
     )
     parser.add_argument("--provider", choices=get_args(Provider), default="ollama")
     parser.add_argument("--model", help="model name (default: the provider's default)")
+    # Set by the launcher, which knows the session and where its traces go.
+    parser.add_argument("--session-id", help="hindsight session this run belongs to")
+    parser.add_argument(
+        "--trace-file", type=Path, help="write the agent trace to this JSON Lines file"
+    )
     args = parser.parse_args()
+    if (args.session_id is None) != (args.trace_file is None):
+        parser.error("--session-id and --trace-file must be given together")
     asyncio.run(_run(args))
 
 
@@ -41,9 +49,16 @@ async def _run(args: argparse.Namespace) -> None:
     async with AsyncExitStack() as stack:
         tools = await open_mcp_tools(stack, load_servers(args.config))
         llm = get_llm(args.provider, model=args.model, reasoning=True)
+        middleware = []
+        if args.trace_file is not None:
+            trace = AgentTrace(args.trace_file, args.session_id)
+            stack.callback(trace.close)
+            middleware.append(TraceMiddleware(trace))
         # The standard LangChain agent loop, so results apply to a typical agent rather
         # than a custom one. MCP tools are async-only, so it is always run with astream.
-        agent = create_agent(llm, tools, system_prompt=sys_prompt())
+        agent = create_agent(
+            llm, tools, system_prompt=sys_prompt(), middleware=middleware
+        )
         if args.prompt:
             await stream_turn(agent, [HumanMessage(args.prompt)])
             print()

@@ -12,6 +12,7 @@ dependencies = [
     "httpx>=0.28.1",
     "mcp>=1.24,<2",
     "starlette>=1.7.0",
+    "trace-schema",
     "uvicorn>=0.53.0",
 ]
 
@@ -21,3 +22,6 @@ interposer = "interposer.main:main"
 [build-system]
 requires = ["uv_build>=0.12.9,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv.sources]
+trace-schema = { workspace = true }

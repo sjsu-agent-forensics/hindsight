@@ -15,6 +15,7 @@ import uuid
 from pathlib import Path
 
 import httpx
+import trace_schema as ts
 
 # The agent's config, whose URLs carry a {session_id} placeholder. Read as a file, not
 # imported: apps never import each other.
@@ -47,7 +48,7 @@ def _launch(prompt: str, gateway: str, template: Path, agent_args: list[str]) ->
     """Register a session, run the agent in it, end it, and return the agent's code."""
     session_id = str(uuid.uuid4())
     with httpx.Client(base_url=gateway, timeout=30) as http:
-        _register(http, session_id, prompt)
+        trace_dir = _register(http, session_id, prompt)
         try:
             with tempfile.TemporaryDirectory() as config_dir:
                 config = Path(config_dir) / "servers.toml"
@@ -57,31 +58,37 @@ def _launch(prompt: str, gateway: str, template: Path, agent_args: list[str]) ->
                     ),
                     encoding="utf-8",
                 )
-                # "--" so a prompt starting with "-" is not read as an option.
                 command = [
                     *[sys.executable, "-m", "agent.main"],
-                    *["--config", str(config), *agent_args, "--", prompt],
+                    *["--config", str(config), "--session-id", session_id],
+                    *["--trace-file", str(trace_dir / ts.AGENT_TRACE_FILE)],
+                    # "--" so a prompt starting with "-" is not read as an option.
+                    *[*agent_args, "--", prompt],
                 ]
                 return subprocess.run(command).returncode
         finally:
             _end(http, session_id)
+            print(f"  traces: {trace_dir}", file=sys.stderr)
 
 
-def _register(http: httpx.Client, session_id: str, prompt: str) -> None:
+def _register(http: httpx.Client, session_id: str, prompt: str) -> Path:
     """Register the session with the prompt as its only trusted input.
 
-    Exits the launcher if the interposer is unreachable or refuses the registration,
-    since the agent would be refused at startup anyway.
+    Returns the session's trace directory, where the agent's trace goes beside the
+    interposer's. Exits the launcher if the interposer is unreachable or refuses the
+    registration, since the agent would be refused at startup anyway.
     """
     payload = {
         "session_id": session_id,
         "trusted_inputs": [{"kind": "user_prompt", "content": prompt}],
     }
     try:
-        http.post("/sessions", json=payload).raise_for_status()
+        response = http.post("/sessions", json=payload)
+        response.raise_for_status()
     except httpx.HTTPError as error:
         sys.exit(f"Could not register a session with the interposer: {error}")
     print(f"[hindsight session {session_id}]", file=sys.stderr)
+    return Path(response.json()["trace_dir"])
 
 
 def _end(http: httpx.Client, session_id: str) -> None:

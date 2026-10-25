@@ -6,9 +6,22 @@ reached through the interposer (`apps/interposer`), and has no in-process tools,
 interposer cannot see them. It holds one persistent MCP session per server for the whole run.
 
 Its servers are listed in [`servers.toml`](servers.toml), one entry per server, each pointing at
-the interposer's `/s/{session_id}/mcp/<name>` path. The agent itself knows nothing of hindsight
-sessions: the launcher (`apps/launcher`) registers a session and gives the agent a copy of this
-file with `{session_id}` filled in.
+the interposer's `/s/{session_id}/mcp/<name>` path. The launcher (`apps/launcher`) registers a
+session and gives the agent a copy of this file with `{session_id}` filled in.
+
+## Telemetry
+
+The agent's only coupling to hindsight is its telemetry (`agent.telemetry`); enforcement lives in
+the interposer.
+
+- **Join key.** Every `tools/call` request carries the agent's tool-call ID in `params._meta`
+  under `hindsight/tool_call_id`, which the interposer records on its trace. The LangChain MCP
+  adapter cannot set `_meta` itself, so an adapter interceptor and a wrapper around the session's
+  `call_tool` add it.
+- **Agent trace.** With `--session-id` and `--trace-file` (the launcher passes both), a
+  `create_agent` middleware writes `user_turn`, `llm_step`, `tool_call` and `tool_result` events in
+  the `trace-schema` format. Each `tool_call` lists the tool results the model had seen. Model
+  reasoning is not recorded.
 
 ## Running it
 

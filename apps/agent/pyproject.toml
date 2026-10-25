@@ -13,6 +13,7 @@ dependencies = [
     "langchain-core>=1.6.9",
     "langchain-mcp-adapters>=0.3.2",
     "langgraph>=1.2.11",
+    "trace-schema",
 ]
 
 [project.scripts]
@@ -20,6 +21,7 @@ agent = "agent.main:main"
 
 [tool.uv.sources]
 hindsight-core = { workspace = true }
+trace-schema = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.12.9,<0.13.0"]
