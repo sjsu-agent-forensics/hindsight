@@ -1,9 +1,11 @@
 """Relay one agent-facing MCP session to its own upstream session.
 
-Every JSON-RPC message is forwarded as received, in both directions. The relay never
+Every JSON-RPC message is forwarded as received, in both directions, except a tool call
+the session's rules block, which is answered with an error instead. The relay never
 changes tool names, descriptors, arguments or results, so what the agent sees is what
-the upstream server sent. It shows each message to an observer (the tracer) before
-forwarding it. Upstream content is untrusted and is passed through, not acted on.
+the upstream server sent. It shows each message to an observer (the tracer and the
+indexer) before forwarding it. Upstream content is untrusted and is passed through, not
+acted on.
 
 The relay works the same for remote HTTP servers and local stdio children: it connects
 through a connector that yields the upstream's message streams.
@@ -28,6 +30,8 @@ from mcp.types import (
     RequestId,
 )
 
+from interposer.enforcement import CallDecision
+
 logger = logging.getLogger(__name__)
 
 ReadStream = MemoryObjectReceiveStream[SessionMessage | Exception]
@@ -42,7 +46,8 @@ UpstreamConnector = Callable[
     ],
 ]
 
-# JSON-RPC defines no timeout code; this is the one the TypeScript MCP SDK uses.
+# JSON-RPC defines no timeout code; this is the one the TypeScript MCP SDK uses. Only
+# requests other than tool calls get it: a tool call gets a tool error result instead.
 _REQUEST_TIMEOUT = -32001
 
 
@@ -53,8 +58,14 @@ class MessageObserver(Protocol):
     messages.
     """
 
-    def on_agent_message(self, message: JSONRPCMessage) -> None:
-        """See a message from the agent, before it goes upstream."""
+    def on_agent_message(
+        self, message: JSONRPCMessage, decision: CallDecision | None
+    ) -> None:
+        """See a message from the agent, with the decision on it if it is a tool call.
+
+        Called before the message is forwarded, or instead of forwarding it if the
+        decision blocks it.
+        """
 
     def on_upstream_message(self, message: JSONRPCMessage) -> None:
         """See a message from the upstream server, before it goes to the agent."""
@@ -78,6 +89,7 @@ class UpstreamRelay:
         self,
         server: str,
         connect: UpstreamConnector,
+        decide: Callable[[JSONRPCMessage], CallDecision | None],
         observer: MessageObserver,
         on_upstream_session: Callable[[str], None],
         timeout: float,
@@ -85,6 +97,9 @@ class UpstreamRelay:
         """Create a relay to the server named ``server``, reached through ``connect``.
 
         Args:
+            decide: Called on every agent message before it is forwarded; returns the
+                decision on a tool call (None for anything else). A blocked call is
+                answered with an error and never reaches the upstream server.
             on_upstream_session: Called once with the upstream server's session ID (its
                 ``Mcp-Session-Id``), as soon as the upstream has issued one.
             timeout: Seconds an agent request may wait for its upstream answer before
@@ -92,12 +107,14 @@ class UpstreamRelay:
         """
         self._server = server
         self._connect = connect
+        self._decide = decide
         self._observer = observer
         self._on_upstream_session = on_upstream_session
         self._timeout = timeout
         # IDs of agent requests sent upstream and not yet answered. If the upstream is
         # lost, these are the requests to fail.
-        self._pending: set[RequestId] = set()
+        # Each pending request's method, so a failed tool call can be answered as one.
+        self._pending: dict[RequestId, str] = {}
         # Requests already answered with a timeout error; a late upstream answer to one
         # of them is dropped, since the agent has its answer.
         self._timed_out: set[RequestId] = set()
@@ -160,10 +177,11 @@ class UpstreamRelay:
         (HTTP DELETE) or the gateway ends the hindsight session it belongs to. Either
         way it ends, it cancels ``tg`` to stop the other direction too.
 
-        Each request's ID is added to the pending set before it is sent, so a request is
-        tracked even if the upstream fails while sending it, and its timeout starts.
-        Notifications and the agent's responses to upstream requests carry no answer, so
-        they are neither tracked nor timed.
+        Each tool call is decided first; a blocked one is answered with an error here
+        and goes no further. Each forwarded request's ID is added to the pending set
+        before it is sent, so a request is tracked even if the upstream fails while
+        sending it, and its timeout starts. Notifications and the agent's responses to
+        upstream requests carry no answer, so they are neither tracked nor timed.
         """
         try:
             while True:
@@ -181,10 +199,23 @@ class UpstreamRelay:
                     # with an error; there is no message to forward.
                     logger.warning("Unreadable message from the agent: %s", item)
                     continue
-                if isinstance(item.message.root, JSONRPCRequest):
-                    self._pending.add(item.message.root.id)
-                    tg.start_soon(self._expire, item.message.root.id, agent_write)
-                self._observer.on_agent_message(item.message)
+                decision = self._decide(item.message)
+                self._observer.on_agent_message(item.message, decision)
+                request = item.message.root
+                if decision is not None and decision.blocked:
+                    assert isinstance(request, JSONRPCRequest)
+                    rules = ", ".join(decision.decision.rule_ids)
+                    await self._fail(
+                        agent_write,
+                        request.id,
+                        request.method,
+                        INTERNAL_ERROR,
+                        f"Call blocked by hindsight rule {rules}",
+                    )
+                    continue
+                if isinstance(request, JSONRPCRequest):
+                    self._pending[request.id] = request.method
+                    tg.start_soon(self._expire, request.id, agent_write)
                 # A fresh SessionMessage drops the server-side transport metadata, which
                 # means nothing to the upstream client transport.
                 await upstream_write.send(SessionMessage(message=item.message))
@@ -240,7 +271,7 @@ class UpstreamRelay:
                             answer.id,
                         )
                         continue
-                    self._pending.discard(answer.id)
+                    self._pending.pop(answer.id, None)
                 self._observer.on_upstream_message(item.message)
                 await agent_write.send(SessionMessage(message=item.message))
         except (anyio.ClosedResourceError, anyio.BrokenResourceError):
@@ -250,16 +281,17 @@ class UpstreamRelay:
             scope.cancel()
 
     async def _expire(self, request_id: RequestId, agent_write: WriteStream) -> None:
-        """Answer a request with a timeout error if the upstream has not by then."""
+        """Answer a request with a timeout failure if the upstream has not by then."""
         await anyio.sleep(self._timeout)
-        if request_id not in self._pending:
+        method = self._pending.pop(request_id, None)
+        if method is None:
             return
-        self._pending.discard(request_id)
         self._timed_out.add(request_id)
         self._observer.on_timeout(request_id)
-        await self._send_error(
+        await self._fail(
             agent_write,
             request_id,
+            method,
             _REQUEST_TIMEOUT,
             f"Upstream MCP server {self._server!r} did not answer within "
             f"{self._timeout:g} s",
@@ -268,40 +300,58 @@ class UpstreamRelay:
     async def _fail_until_closed(
         self, agent_read: ReadStream, agent_write: WriteStream
     ) -> None:
-        """Answer agent requests with errors until the agent's side closes.
+        """Answer agent requests with failures until the agent's side closes.
 
         Called once the upstream side has ended. Every request still awaiting an answer
-        gets an error first, then every request the agent sends afterwards, so a dead
+        is failed first, then every request the agent sends afterwards, so a dead
         upstream fails each call promptly instead of leaving the agent waiting until its
-        own timeout. Each error carries the original request's ID, so the agent's MCP
-        client raises it as that call's failure. Notifications need no answer and are
+        own timeout. Each failure carries the original request's ID, so the agent's MCP
+        client takes it as that call's answer. Notifications need no answer and are
         dropped.
         """
         message = f"Upstream MCP server {self._server!r} is unavailable"
-        for request_id in self._pending:
-            await self._send_error(agent_write, request_id, INTERNAL_ERROR, message)
+        for request_id, method in self._pending.items():
+            await self._fail(agent_write, request_id, method, INTERNAL_ERROR, message)
         self._pending.clear()
         try:
             async for item in agent_read:
-                if not isinstance(item, Exception) and isinstance(
-                    item.message.root, JSONRPCRequest
-                ):
-                    await self._send_error(
-                        agent_write, item.message.root.id, INTERNAL_ERROR, message
+                if isinstance(item, Exception):
+                    continue
+                request = item.message.root
+                if isinstance(request, JSONRPCRequest):
+                    await self._fail(
+                        agent_write, request.id, request.method, INTERNAL_ERROR, message
                     )
         except anyio.ClosedResourceError:
             # The gateway closed the agent's side; nothing more will arrive.
             pass
 
-    async def _send_error(
-        self, agent_write: WriteStream, request_id: RequestId, code: int, message: str
+    async def _fail(
+        self,
+        agent_write: WriteStream,
+        request_id: RequestId,
+        method: str,
+        code: int,
+        message: str,
     ) -> None:
-        """Answer one agent request with an error, if the agent can still hear."""
-        error = JSONRPCError(
-            jsonrpc="2.0", id=request_id, error=ErrorData(code=code, message=message)
-        )
+        """Answer one agent request that the relay itself fails, if the agent can hear.
+
+        A tool call is answered with a tool error result (``isError``), the way the MCP
+        spec has tool execution errors reported, so the model sees the failure and the
+        agent carries on: frameworks such as LangChain's abort the whole run on a
+        JSON-RPC error. Any other request gets a JSON-RPC error with ``code``.
+        """
+        if method == "tools/call":
+            result = {"content": [{"type": "text", "text": message}], "isError": True}
+            answer = JSONRPCResponse(jsonrpc="2.0", id=request_id, result=result)
+        else:
+            answer = JSONRPCError(
+                jsonrpc="2.0",
+                id=request_id,
+                error=ErrorData(code=code, message=message),
+            )
         try:
-            await agent_write.send(SessionMessage(message=JSONRPCMessage(error)))
+            await agent_write.send(SessionMessage(message=JSONRPCMessage(answer)))
         except (anyio.ClosedResourceError, anyio.BrokenResourceError):
             logger.debug(
                 "Agent session closed before request %r was answered", request_id

@@ -138,3 +138,12 @@ def test_parallel_steps_report_whether_calls_overlapped():
     one_after_another = _proxy(*_answered("2", "a"), *_answered("3", "b"))
     assert parallel_steps(overlapping, step) == [(["a", "b"], True)]
     assert parallel_steps(one_after_another, step) == [(["a", "b"], False)]
+
+
+def test_a_blocked_call_has_no_answer():
+    blocked = _proxy(("call", "2", "a"), ("decision", "2", "a"))
+    blocked[2][ts.DECISION] = "block"
+    assert check_events(blocked, _agent("a")) == []
+    answered = _proxy(*_answered("2", "a"))
+    answered[2][ts.DECISION] = "block"
+    assert check_events(answered, _agent("a"))

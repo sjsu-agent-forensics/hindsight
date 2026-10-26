@@ -23,6 +23,7 @@ import logging
 import uuid
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from pathlib import Path
 
 import anyio
@@ -34,6 +35,8 @@ from mcp.server.streamable_http import (
 )
 from mcp.types import JSONRPCMessage, RequestId
 from provenance import ExtractionConfig
+from rule_engine import Rule, RuleError
+from rule_engine.sources import RuleSource
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -42,7 +45,8 @@ from starlette.types import Message, Receive, Scope, Send
 
 from interposer.children import ProcessLauncher, SubprocessLauncher
 from interposer.config import StdioUpstream, Upstream
-from interposer.indexing import ChannelIndexer, matches_to_trace
+from interposer.enforcement import CallDecision, ChannelEnforcer
+from interposer.indexing import ChannelIndexer
 from interposer.refused import RefusedLog
 from interposer.relay import MessageObserver, UpstreamConnector, UpstreamRelay
 from interposer.sessions import (
@@ -70,6 +74,7 @@ def build_app(
     upstream_timeout: float,
     launcher: ProcessLauncher | None = None,
     extraction: ExtractionConfig | None = None,
+    rules: RuleSource | None = None,
 ) -> Starlette:
     """Build the gateway app serving every configured upstream server.
 
@@ -82,6 +87,8 @@ def build_app(
             before the agent gets a timeout error instead.
         launcher: Starts stdio servers' child processes; plain subprocesses by default.
         extraction: Which values the provenance index extracts; the defaults if None.
+        rules: Where each session's rules are read from at registration; no rules (every
+            call allowed) if None.
     """
     stdio_upstreams = {
         name: u for name, u in upstreams.items() if isinstance(u, StdioUpstream)
@@ -93,6 +100,7 @@ def build_app(
         stdio_upstreams,
         launcher or SubprocessLauncher(),
         extraction or ExtractionConfig(),
+        rules or _NoRules(),
     )
     refused = RefusedLog(log_dir / "refused.jsonl")
     launcher_api = _LauncherApi(registry, trace_writer)
@@ -156,6 +164,11 @@ class _LauncherApi:
             return JSONResponse(
                 {"error": f"Session {session_id} was already registered"}, 409
             )
+        except RuleError as error:
+            logger.error(
+                "Session %s not registered: invalid rule: %s", session_id, error
+            )
+            return JSONResponse({"error": f"Invalid rule: {error}"}, 500)
         except ChildStartError as error:
             logger.error("Session %s not registered: %s", session_id, error)
             return JSONResponse({"error": str(error)}, 502)
@@ -338,14 +351,12 @@ class _McpEndpoint:
         session.channels[channel.mcp_session_id] = channel
         index = session.index
         assert index is not None, "an active session has an index"
-        tracer = ChannelTracer(
-            session.trace,
-            server,
-            channel.mcp_session_id,
-            match=lambda arguments: matches_to_trace(index.match(arguments)),
+        parts = _ChannelParts(
+            enforcer=ChannelEnforcer(index, session.rules, server),
+            tracer=ChannelTracer(session.trace, server, channel.mcp_session_id),
+            indexer=ChannelIndexer(index, server),
         )
-        indexer = ChannelIndexer(index, server)
-        relay_parts = (connect, tracer, indexer, self._upstream_timeout)
+        relay_parts = (connect, parts, self._upstream_timeout)
         await self.task_group.start(_run_channel, channel, *relay_parts)
 
         status = await _serve_and_report_status(
@@ -364,16 +375,24 @@ class _McpEndpoint:
         return True
 
 
+@dataclass(frozen=True)
+class _ChannelParts:
+    """What one MCP session's relay consults: enforcer, tracer and indexer."""
+
+    enforcer: ChannelEnforcer
+    tracer: ChannelTracer
+    indexer: ChannelIndexer
+
+
 async def _run_channel(
     channel: McpChannel,
     connect: UpstreamConnector,
-    tracer: ChannelTracer,
-    indexer: ChannelIndexer,
+    parts: _ChannelParts,
     upstream_timeout: float,
     *,
     task_status: TaskStatus[None] = anyio.TASK_STATUS_IGNORED,
 ) -> None:
-    """Relay and trace one MCP session until either side closes, then mark it closed.
+    """Relay, enforce and trace one MCP session until either side closes.
 
     However the relay ends, the agent-facing transport is terminated, so later requests
     with this MCP session ID get 404 rather than reaching a dead relay.
@@ -381,7 +400,7 @@ async def _run_channel(
 
     def record_upstream_session(upstream_session_id: str) -> None:
         channel.upstream_session_id = upstream_session_id
-        tracer.upstream_session_id = upstream_session_id
+        parts.tracer.upstream_session_id = upstream_session_id
 
     try:
         async with channel.transport.connect() as (agent_read, agent_write):
@@ -389,8 +408,9 @@ async def _run_channel(
             relay = UpstreamRelay(
                 channel.server,
                 connect,
+                decide=parts.enforcer.decide,
                 # The indexer first, so a response is indexed before it is traced.
-                observer=_FanOut(indexer, tracer),
+                observer=_FanOut(parts.indexer, parts.tracer),
                 on_upstream_session=record_upstream_session,
                 timeout=upstream_timeout,
             )
@@ -426,9 +446,11 @@ class _FanOut:
     def __init__(self, *observers: MessageObserver) -> None:
         self._observers = observers
 
-    def on_agent_message(self, message: JSONRPCMessage) -> None:
+    def on_agent_message(
+        self, message: JSONRPCMessage, decision: CallDecision | None
+    ) -> None:
         for observer in self._observers:
-            observer.on_agent_message(message)
+            observer.on_agent_message(message, decision)
 
     def on_upstream_message(self, message: JSONRPCMessage) -> None:
         for observer in self._observers:
@@ -441,3 +463,10 @@ class _FanOut:
     def on_upstream_lost(self, error_type: str) -> None:
         for observer in self._observers:
             observer.on_upstream_lost(error_type)
+
+
+class _NoRules:
+    """A rule source with no rules: every call is allowed."""
+
+    def load_rules(self) -> list[Rule]:
+        return []

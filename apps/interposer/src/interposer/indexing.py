@@ -1,8 +1,10 @@
-"""Keeps a session's provenance index up to date from its MCP sessions' responses.
+"""Keeps a session's provenance index up to date from its MCP sessions' answers.
 
-The relay shows each upstream message to the indexer before forwarding it, so a
-response's values are indexed before the agent can see them: any call the agent makes
-after reading a response is matched against that response.
+Tool results are indexed as ``tool`` values, and the URLs, emails and paths in tool
+descriptors (``tools/list`` answers) as ``descriptor`` values. The relay shows each
+upstream message to the indexer before forwarding it, so an answer's values are indexed
+before the agent can see them: any call the agent makes after reading an answer is
+matched against it.
 """
 
 from typing import Any
@@ -17,9 +19,11 @@ from mcp.types import (
 )
 from provenance import IndexEntry, ProvenanceIndex
 
+from interposer.enforcement import CallDecision, tool_call_id_of
+
 
 class ChannelIndexer:
-    """Indexes one MCP session's tool results into its hindsight session's index.
+    """Indexes one MCP session's descriptors and tool results into its session's index.
 
     The index is shared by every MCP session in the hindsight session, so a value one
     server returned is matched in a call to any other.
@@ -28,40 +32,51 @@ class ChannelIndexer:
     def __init__(self, index: ProvenanceIndex, server: str) -> None:
         self._index = index
         self._server = server
+        # In-flight tools/list requests, whose answers carry descriptors.
+        self._lists: set[RequestId] = set()
         # Each in-flight tools/call: its tool name and the agent's tool-call ID.
         self._calls: dict[RequestId, tuple[str | None, str | None]] = {}
 
-    def on_agent_message(self, message: JSONRPCMessage) -> None:
-        """Remember a ``tools/call`` request, to know whose result arrives later."""
+    def on_agent_message(
+        self, message: JSONRPCMessage, decision: CallDecision | None
+    ) -> None:
+        """Remember a request whose answer will be indexed; skip a blocked call."""
         request = message.root
-        if isinstance(request, JSONRPCRequest) and request.method == "tools/call":
-            params = request.params or {}
-            meta = params.get("_meta")
-            tool_call_id = (
-                meta.get(ts.TOOL_CALL_ID_META_KEY) if isinstance(meta, dict) else None
-            )
-            self._calls[request.id] = (params.get("name"), tool_call_id)
+        if not isinstance(request, JSONRPCRequest):
+            return
+        if request.method == "tools/list":
+            self._lists.add(request.id)
+        elif request.method == "tools/call" and not (decision and decision.blocked):
+            name = (request.params or {}).get("name")
+            self._calls[request.id] = (name, tool_call_id_of(request))
 
     def on_upstream_message(self, message: JSONRPCMessage) -> None:
-        """Index a ``tools/call`` result, with that call as its source."""
+        """Index a ``tools/list`` answer's descriptors or a ``tools/call`` result."""
         response = message.root
         if not isinstance(response, JSONRPCResponse | JSONRPCError):
             return
         call = self._calls.pop(response.id, None)
-        if call is None or isinstance(response, JSONRPCError):
+        listed = response.id in self._lists
+        self._lists.discard(response.id)
+        if isinstance(response, JSONRPCError):
             return
-        tool, tool_call_id = call
-        self._index.add_tool_result(
-            response.result, self._server, tool, str(response.id), tool_call_id
-        )
+        if listed:
+            self._index.add_descriptors(response.result, self._server, str(response.id))
+        elif call is not None:
+            tool, tool_call_id = call
+            self._index.add_tool_result(
+                response.result, self._server, tool, str(response.id), tool_call_id
+            )
 
     def on_timeout(self, request_id: RequestId) -> None:
-        """Forget a call that will never be answered; a late answer is dropped."""
+        """Forget a request that will never be answered; a late answer is dropped."""
         self._calls.pop(request_id, None)
+        self._lists.discard(request_id)
 
     def on_upstream_lost(self, error_type: str) -> None:
-        """Forget every call; none of them will be answered now."""
+        """Forget every request; none of them will be answered now."""
         self._calls.clear()
+        self._lists.clear()
 
 
 def matches_to_trace(matches: dict[str, list[IndexEntry]]) -> dict[str, list[dict]]:

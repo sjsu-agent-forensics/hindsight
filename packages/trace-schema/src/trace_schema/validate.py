@@ -7,7 +7,8 @@ problem found:
 2. The proxy trace starts with the registration event.
 3. Every proxy ``call`` has exactly one ``decision`` and one answer, a ``response`` or a
    ``timeout``, all paired by MCP session and JSON-RPC request ID and carrying the same
-   tool-call ID. A call may have no answer only if its MCP session recorded a ``crash``.
+   tool-call ID. A call has no answer if its decision blocked it, and may have none if
+   its MCP session recorded a ``crash``.
 4. Every agent ``tool_call`` joins exactly one proxy ``call`` on the tool-call ID, and
    every proxy ``call`` joins exactly one agent ``tool_call``.
 5. Every agent ``tool_call`` has one ``tool_result``.
@@ -104,7 +105,13 @@ def _check_proxy_pairing(proxy: list[Event]) -> list[str]:
     for key, events in by_request.items():
         calls, decisions = len(events["call"]), len(events["decision"])
         answers = len(events["response"]) + len(events["timeout"])
-        allowed_answers = {0, 1} if key[0] in crashed else {1}
+        blocked = any(e.get(ts.DECISION) == "block" for e in events["decision"])
+        if blocked:
+            allowed_answers = {0}
+        elif key[0] in crashed:
+            allowed_answers = {0, 1}
+        else:
+            allowed_answers = {1}
         if calls != 1 or decisions != 1 or answers not in allowed_answers:
             counts = {kind: len(found) for kind, found in events.items()}
             problems.append(f"request {key}: unexpected events {counts}")

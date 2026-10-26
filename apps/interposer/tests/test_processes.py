@@ -135,17 +135,17 @@ def test_a_second_mcp_session_to_a_stdio_server_is_refused_and_logged(gateway):
 def test_an_unanswered_call_times_out_without_being_a_block(gateway):
     session = gateway.register()
 
-    async def call_slow() -> None:
+    async def call_slow():
         async with AsyncExitStack() as stack:
             mcp = await open_session(stack, gateway.mcp_url(session.id, "faults"))
-            await mcp.call_tool("slow", {"seconds": UPSTREAM_TIMEOUT + 5})
+            return await mcp.call_tool("slow", {"seconds": UPSTREAM_TIMEOUT + 5})
 
     started = time.monotonic()
-    with pytest.raises(Exception) as raised:
-        run(call_slow)
+    result = run(call_slow)
     elapsed = time.monotonic() - started
     gateway.end(session.id)
-    assert "did not answer" in repr(raised.value)
+    # A tool error result, so the agent sees a failed call rather than aborting.
+    assert result.isError and "did not answer" in result.content[0].text
     assert elapsed < UPSTREAM_TIMEOUT * 2
     [timeout] = _events(session.trace_dir, "timeout")
     assert timeout[ts.TOOL_NAME] == "slow" and timeout[ts.ERROR_TYPE] == "timeout"
@@ -165,17 +165,15 @@ def test_after_a_child_is_killed_every_call_fails_with_one_crash_event(gateway):
             await anyio.to_thread.run_sync(_gone_within, pid, 6)
             for _ in range(2):
                 started = time.monotonic()
-                try:
-                    with anyio.fail_after(5):
-                        await mcp.call_tool("pid", {})
-                    outcomes.append("answered")
-                except Exception as error:
-                    fast = time.monotonic() - started < 1
-                    outcomes.append(
-                        "failed fast"
-                        if fast and "unavailable" in str(error)
-                        else repr(error)
-                    )
+                with anyio.fail_after(5):
+                    result = await mcp.call_tool("pid", {})
+                fast = time.monotonic() - started < 1
+                text = result.content[0].text
+                outcomes.append(
+                    "failed fast"
+                    if result.isError and fast and "unavailable" in text
+                    else f"isError={result.isError}: {text}"
+                )
         return outcomes
 
     assert run(kill_then_call) == ["failed fast", "failed fast"]

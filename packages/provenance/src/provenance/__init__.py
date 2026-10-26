@@ -9,6 +9,9 @@ inputs always give the same matches, live in the proxy and when replaying a trac
 Values pass through the model on their way from a response to a later call. The index
 sees only values the model copies; a value it rewrites or encodes is not matched.
 
+Tool results are indexed as ``tool`` values. Tool descriptors are indexed too, as
+``descriptor`` values, but only their URLs, emails and paths.
+
 What is indexed is set by ``ExtractionConfig`` (tuning items in the design):
 
 - ``url``: ``http``, ``https``, ``ftp`` and ``file`` URLs
@@ -31,7 +34,11 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 ValueType = Literal["url", "email", "path", "string"]
-SourceKind = Literal["trusted", "tool"]
+SourceKind = Literal["trusted", "tool", "descriptor"]
+
+# What is indexed from tool descriptors: an attack's handles (where to send, what to
+# read), not the descriptions' ordinary text, which would only add noise.
+_DESCRIPTOR_TYPES: frozenset[ValueType] = frozenset({"url", "email", "path"})
 
 _URL = re.compile(r"\b(?:https?|ftp|file)://[^\s\"'<>(){}\[\]]+", re.IGNORECASE)
 _EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b")
@@ -61,14 +68,24 @@ class ExtractionConfig:
     min_length: int = 8
     value_types: frozenset[ValueType] = frozenset({"url", "email", "path", "string"})
 
+    def to_dict(self) -> dict[str, Any]:
+        """Return the settings as JSON-ready data, for recording in a trace."""
+        return {"min_length": self.min_length, "value_types": sorted(self.value_types)}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ExtractionConfig":
+        """Rebuild settings recorded by ``to_dict``."""
+        return cls(data["min_length"], frozenset(data["value_types"]))
+
 
 @dataclass(frozen=True)
 class IndexEntry:
     """One indexed value and where it came from.
 
     For a ``tool`` value, ``server``, ``tool``, ``jsonrpc_id`` and ``tool_call_id`` name
-    the response it was found in. A ``trusted`` value came from the session's trusted
-    inputs and has none of them.
+    the response it was found in. A ``descriptor`` value was found in the description or
+    schema of tool ``tool`` on ``server``, in the ``tools/list`` answer ``jsonrpc_id``.
+    A ``trusted`` value came from the session's trusted inputs and has none of them.
     """
 
     value: str
@@ -82,6 +99,22 @@ class IndexEntry:
 def normalize(text: str) -> str:
     """Lowercase ``text`` and collapse each run of whitespace to one space."""
     return _WHITESPACE.sub(" ", text).strip().lower()
+
+
+def value_kinds(value: str) -> set[ValueType]:
+    """Return what kind of value an indexed value is, for rules that filter by kind.
+
+    A value that is exactly a URL, email address or path is that kind; any other value
+    is a ``string``.
+    """
+    kinds: set[ValueType] = set()
+    if _URL.fullmatch(value):
+        kinds.add("url")
+    if _EMAIL.fullmatch(value):
+        kinds.add("email")
+    if _PATH.fullmatch(value):
+        kinds.add("path")
+    return kinds or {"string"}
 
 
 def extract_values(data: Any, config: ExtractionConfig) -> set[str]:
@@ -127,6 +160,29 @@ class ProvenanceIndex:
         """Index the values in one tool call's result, with the call as their source."""
         for value in extract_values(result, self.config):
             self._add(IndexEntry(value, "tool", server, tool, jsonrpc_id, tool_call_id))
+
+    def add_descriptors(self, result: Any, server: str, jsonrpc_id: str) -> None:
+        """Index the URLs, emails and paths in a ``tools/list`` result, per tool.
+
+        A tool's description is an instruction to the model, not data, so a value from
+        one that reaches a call's arguments is its own kind of evidence: a poisoned
+        descriptor's planted destination, for example. Each value is attributed to the
+        tool whose descriptor held it.
+        """
+        tools = result.get("tools") if isinstance(result, dict) else None
+        if not isinstance(tools, list):
+            return
+        config = ExtractionConfig(
+            self.config.min_length, self.config.value_types & _DESCRIPTOR_TYPES
+        )
+        for descriptor in tools:
+            if not isinstance(descriptor, dict):
+                continue
+            tool = descriptor.get("name")
+            for value in extract_values(descriptor, config):
+                self._add(
+                    IndexEntry(value, "descriptor", server, tool, jsonrpc_id, None)
+                )
 
     def match(self, arguments: dict[str, Any]) -> dict[str, list[IndexEntry]]:
         """Return, per argument, the indexed values it contains and their sources.

@@ -19,6 +19,8 @@ import trace_schema as ts
 from anyio.abc import TaskGroup
 from mcp.server.streamable_http import StreamableHTTPServerTransport
 from provenance import ExtractionConfig, ProvenanceIndex
+from rule_engine import Rule
+from rule_engine.sources import RuleSource
 
 from interposer.children import ProcessLauncher, StdioChild
 from interposer.config import StdioUpstream
@@ -74,13 +76,15 @@ class Session:
     already closed, so the mapping survives for the record. ``children`` holds the
     session's own process for each stdio server, keyed by server name. ``index`` is the
     session's provenance index, shared by all its MCP sessions; it is discarded (set to
-    None) when the session ends.
+    None) when the session ends. ``rules`` is the rule set read at registration, which
+    the session keeps for its whole life.
     """
 
     id: str
     trusted_inputs: list[TrustedInput]
     trace: SessionTrace
     index: ProvenanceIndex | None
+    rules: list[Rule] = field(default_factory=list)
     children: dict[str, StdioChild] = field(default_factory=dict)
     channels: dict[str, McpChannel] = field(default_factory=dict)
     ended_by: EndedBy | None = None
@@ -157,6 +161,7 @@ class SessionRegistry:
         stdio_upstreams: dict[str, StdioUpstream],
         launcher: ProcessLauncher,
         extraction: ExtractionConfig,
+        rule_source: RuleSource,
     ) -> None:
         self._sessions: dict[str, Session] = {}
         # IDs whose registration is starting children, so a concurrent registration of
@@ -167,6 +172,7 @@ class SessionRegistry:
         self._stdio_upstreams = stdio_upstreams
         self._launcher = launcher
         self._extraction = extraction
+        self._rule_source = rule_source
         # Set by the app's lifespan; children run in it so they outlive the request
         # that registered their session.
         self.task_group: TaskGroup | None = None
@@ -174,18 +180,22 @@ class SessionRegistry:
     async def register(
         self, session_id: str, trusted_inputs: list[TrustedInput]
     ) -> Session:
-        """Register a new session: start its children and index its trusted inputs.
+        """Register a new session: read its rules, start its children, index its inputs.
 
-        Every stdio server gets its own child for the session, and the session gets an
-        empty provenance index holding only its trusted inputs.
+        The session runs under the rules in force now, for its whole life. Every stdio
+        server gets its own child for the session, and the session gets a provenance
+        index holding only its trusted inputs.
 
         Raises:
             SessionExistsError: The ID was registered before.
+            RuleError: A stored rule is malformed. Nothing is started, and the session
+                is not registered: running without a deny rule would be a silent hole.
             ChildStartError: A stdio server could not be started. Any children already
                 started are stopped, and the session is not registered.
         """
         if session_id in self._sessions or session_id in self._registering:
             raise SessionExistsError(session_id)
+        rules = self._rule_source.load_rules()
         self._registering.add(session_id)
         try:
             children = await self._start_children()
@@ -199,18 +209,25 @@ class SessionRegistry:
             trusted_inputs=trusted_inputs,
             trace=SessionTrace(session_id, self._trace_writer),
             index=index,
+            rules=rules,
             children=children,
         )
         self._sessions[session_id] = session
-        # Replay rebuilds the trusted-input index entries from this event.
+        # Replay rebuilds the session's index and decisions from this event: its trusted
+        # inputs, its rules and its extraction settings.
         session.trace.emit(
             "registration",
-            {ts.TRUSTED_INPUTS: [asdict(trusted) for trusted in trusted_inputs]},
+            {
+                ts.TRUSTED_INPUTS: [asdict(trusted) for trusted in trusted_inputs],
+                ts.RULES: [rule.to_dict() for rule in rules],
+                ts.EXTRACTION: self._extraction.to_dict(),
+            },
         )
         logger.info(
-            "Registered session %s with %d trusted inputs",
+            "Registered session %s with %d trusted inputs and %d rules",
             session_id,
             len(trusted_inputs),
+            len(rules),
         )
         return session
 

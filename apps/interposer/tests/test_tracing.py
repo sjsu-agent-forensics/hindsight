@@ -65,7 +65,7 @@ def test_events_are_numbered_in_order(events):
 def test_tools_list_produces_a_descriptors_event(events):
     [descriptors] = _of_type(events, "descriptors")
     tools = descriptors[ts.PAYLOAD]["result"]["tools"]
-    assert {tool["name"] for tool in tools} == {"forecast", "echo", "lookup"}
+    assert {tool["name"] for tool in tools} == {"forecast", "echo", "lookup", "notes"}
 
 
 @pytest.mark.parametrize("call_id", ["call-a", "call-b"])

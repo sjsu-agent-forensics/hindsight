@@ -7,6 +7,7 @@ from typing import get_args
 
 import uvicorn
 from provenance import ExtractionConfig, ValueType
+from rule_engine.sources import DirectoryRuleSource
 
 from interposer.config import load_config
 from interposer.gateway import build_app
@@ -50,6 +51,13 @@ def main() -> None:
         "timeout error (default: 30)",
     )
     parser.add_argument(
+        "--rules-dir",
+        type=Path,
+        default=_APP_DIR.parents[1] / "rules",
+        help="directory of rule files (one JSON rule per file), read when each session "
+        "is registered (default: %(default)s)",
+    )
+    parser.add_argument(
         "--min-value-length",
         type=int,
         default=ExtractionConfig.min_length,
@@ -80,5 +88,6 @@ def main() -> None:
         args.idle_timeout,
         args.upstream_timeout,
         extraction=ExtractionConfig(args.min_value_length, value_types),
+        rules=DirectoryRuleSource(args.rules_dir),
     )
     uvicorn.run(app, host=args.host, port=args.port)

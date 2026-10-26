@@ -34,7 +34,12 @@ def test_tools_list_matches_the_server_exactly(upstream_url, gateway):
     gateway.end(session.id)
     direct = run(list_tools_raw, upstream_url)
     assert json.dumps(proxied) == json.dumps(direct)
-    assert {tool["name"] for tool in proxied["tools"]} == {"forecast", "echo", "lookup"}
+    assert {tool["name"] for tool in proxied["tools"]} == {
+        "forecast",
+        "echo",
+        "lookup",
+        "notes",
+    }
 
 
 def test_tool_calls_are_relayed(gateway):

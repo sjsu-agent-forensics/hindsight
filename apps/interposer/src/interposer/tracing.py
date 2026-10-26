@@ -13,7 +13,6 @@ on.
 import logging
 import math
 from collections import defaultdict
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -27,6 +26,9 @@ from mcp.types import (
     JSONRPCResponse,
     RequestId,
 )
+
+from interposer.enforcement import CallDecision, tool_call_id_of
+from interposer.indexing import matches_to_trace
 
 logger = logging.getLogger(__name__)
 
@@ -124,55 +126,52 @@ class ChannelTracer:
     upstream). Requests are remembered by JSON-RPC ID, so each answer is matched to its
     own request even when several calls are in flight at once.
 
-    Each call's decision records ``match(arguments)``: which indexed values the call's
-    arguments contained when it was forwarded, and their sources.
+    Each call's decision event records the enforcement decision, the rules that fired,
+    and the provenance matches it was based on: which indexed values the call's
+    arguments contained, and their sources.
     """
 
-    def __init__(
-        self,
-        trace: SessionTrace,
-        server: str,
-        mcp_session_id: str,
-        match: Callable[[dict[str, Any]], dict[str, list[dict]]],
-    ) -> None:
+    def __init__(self, trace: SessionTrace, server: str, mcp_session_id: str) -> None:
         self._trace = trace
         self._server = server
         self._mcp_session_id = mcp_session_id
-        self._match = match
         self.upstream_session_id: str | None = None
         # Each in-flight request's method, so a timeout can say what timed out.
         self._methods: dict[RequestId, str] = {}
         # Each in-flight tools/call: its tool name and the agent's tool-call ID.
         self._calls: dict[RequestId, tuple[str | None, str | None]] = {}
 
-    def on_agent_message(self, message: JSONRPCMessage) -> None:
-        """Record a ``tools/call`` request and its decision; remember every request."""
+    def on_agent_message(
+        self, message: JSONRPCMessage, decision: CallDecision | None
+    ) -> None:
+        """Record a ``tools/call`` request and its decision; remember every request.
+
+        A blocked call is never answered by the server, so it is not remembered.
+        """
         request = message.root
         if not isinstance(request, JSONRPCRequest):
             return
-        self._methods[request.id] = request.method
-        if request.method == "tools/call":
-            params = request.params or {}
-            meta = params.get("_meta")
-            tool_call_id = (
-                meta.get(ts.TOOL_CALL_ID_META_KEY) if isinstance(meta, dict) else None
-            )
-            tool = params.get("name")
+        if request.method != "tools/call" or decision is None:
+            self._methods[request.id] = request.method
+            return
+        tool = (request.params or {}).get("name")
+        tool_call_id = tool_call_id_of(request)
+        fields = self._call_fields(request.id, tool, tool_call_id)
+        self._trace.emit("call", {**fields, ts.PAYLOAD: _dump(message)})
+        rule_ids = decision.decision.rule_ids
+        self._trace.emit(
+            "decision",
+            {
+                **fields,
+                ts.DECISION: decision.decision.effect,
+                ts.RULE_ID: rule_ids[0] if rule_ids else None,
+                ts.RULE_IDS: list(rule_ids),
+                ts.PROVENANCE_MATCHES: matches_to_trace(decision.matches),
+            },
+        )
+        if not decision.blocked:
+            self._methods[request.id] = request.method
             self._calls[request.id] = (tool, tool_call_id)
-            fields = self._call_fields(request.id, tool, tool_call_id)
-            self._trace.emit("call", {**fields, ts.PAYLOAD: _dump(message)})
-            arguments = params.get("arguments")
-            matches = self._match(arguments) if isinstance(arguments, dict) else {}
-            # Every call is allowed until rules are enforced.
-            self._trace.emit(
-                "decision",
-                {
-                    **fields,
-                    ts.DECISION: "allow",
-                    ts.RULE_ID: None,
-                    ts.PROVENANCE_MATCHES: matches,
-                },
-            )
 
     def on_upstream_message(self, message: JSONRPCMessage) -> None:
         """Record the response to a remembered ``tools/list`` or ``tools/call``."""

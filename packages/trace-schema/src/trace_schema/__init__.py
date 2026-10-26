@@ -59,10 +59,15 @@ SERVER = "hindsight.mcp.server"  # the server's name in the interposer config
 UPSTREAM_SESSION_ID = "hindsight.mcp.upstream_session.id"
 PAYLOAD = "hindsight.payload"  # the JSON-RPC message, as forwarded
 DECISION = "hindsight.decision"  # "allow" or "block"
-RULE_ID = "hindsight.rule.id"
+RULE_ID = "hindsight.rule.id"  # the first rule that fired, if any
+RULE_IDS = "hindsight.rule.ids"  # every rule that fired, sorted by ID
 # On decision events: per argument, the indexed values it contains and their sources.
 PROVENANCE_MATCHES = "hindsight.provenance.matches"
 TRUSTED_INPUTS = "hindsight.trusted_inputs"
+# On registration events: the session's rules and provenance extraction settings, so replay
+# evaluates exactly what the live session did.
+RULES = "hindsight.rules"
+EXTRACTION = "hindsight.provenance.config"
 CONTEXT_TOOL_CALL_IDS = "hindsight.context.tool_call_ids"  # results the model had seen
 
 
