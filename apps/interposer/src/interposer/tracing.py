@@ -13,6 +13,7 @@ on.
 import logging
 import math
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -122,12 +123,22 @@ class ChannelTracer:
     before forwarding it, and reports the calls it answers itself (timeouts, a lost
     upstream). Requests are remembered by JSON-RPC ID, so each answer is matched to its
     own request even when several calls are in flight at once.
+
+    Each call's decision records ``match(arguments)``: which indexed values the call's
+    arguments contained when it was forwarded, and their sources.
     """
 
-    def __init__(self, trace: SessionTrace, server: str, mcp_session_id: str) -> None:
+    def __init__(
+        self,
+        trace: SessionTrace,
+        server: str,
+        mcp_session_id: str,
+        match: Callable[[dict[str, Any]], dict[str, list[dict]]],
+    ) -> None:
         self._trace = trace
         self._server = server
         self._mcp_session_id = mcp_session_id
+        self._match = match
         self.upstream_session_id: str | None = None
         # Each in-flight request's method, so a timeout can say what timed out.
         self._methods: dict[RequestId, str] = {}
@@ -150,9 +161,17 @@ class ChannelTracer:
             self._calls[request.id] = (tool, tool_call_id)
             fields = self._call_fields(request.id, tool, tool_call_id)
             self._trace.emit("call", {**fields, ts.PAYLOAD: _dump(message)})
+            arguments = params.get("arguments")
+            matches = self._match(arguments) if isinstance(arguments, dict) else {}
             # Every call is allowed until rules are enforced.
             self._trace.emit(
-                "decision", {**fields, ts.DECISION: "allow", ts.RULE_ID: None}
+                "decision",
+                {
+                    **fields,
+                    ts.DECISION: "allow",
+                    ts.RULE_ID: None,
+                    ts.PROVENANCE_MATCHES: matches,
+                },
             )
 
     def on_upstream_message(self, message: JSONRPCMessage) -> None:

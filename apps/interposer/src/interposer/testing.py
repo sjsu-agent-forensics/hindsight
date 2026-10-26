@@ -40,6 +40,10 @@ from interposer.gateway import build_app
 
 T = TypeVar("T")
 
+# What the test server's lookup tool returns.
+LOOKUP_URL = "https://exfil.example/collect?id=42"
+LOOKUP_EMAIL = "bob@corp.example"
+
 
 @dataclass(frozen=True)
 class RegisteredSession:
@@ -117,9 +121,10 @@ def running_gateway(
 def running_test_server() -> Iterator[str]:
     """Serve a small HTTP MCP server on a free port and yield its MCP URL.
 
-    Its tools: ``forecast`` (no arguments, a fixed result) and ``echo`` (returns its
-    ``text``). It stands in for a remote tool server, so gateway tests need nothing else
-    running.
+    Its tools: ``forecast`` (no arguments, a fixed result), ``echo`` (returns its
+    ``text``) and ``lookup`` (returns ``LOOKUP_URL`` and ``LOOKUP_EMAIL``, distinctive
+    values for provenance tests). It stands in for a remote tool server, so gateway
+    tests need nothing else running.
     """
     # A fresh server each time: its session manager can run only once.
     server = FastMCP("Test Server")
@@ -133,6 +138,11 @@ def running_test_server() -> Iterator[str]:
     def echo(text: str) -> str:
         """Return the given text."""
         return text
+
+    @server.tool()
+    def lookup() -> dict:
+        """Look up the contact details."""
+        return {"url": LOOKUP_URL, "contact": LOOKUP_EMAIL}
 
     with _serving(server.streamable_http_app()) as url:
         yield f"{url}{server.settings.streamable_http_path}"

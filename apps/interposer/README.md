@@ -60,6 +60,24 @@ MCP error, the gateway records a `timeout` event, and a late answer from the ser
 an upstream server fails or closes mid-session, the agent's MCP session stays open but every call
 to that server returns an "unavailable" error, rather than hanging.
 
+## Provenance index
+
+Each session keeps an in-memory index of distinctive values and where each came from, created at
+registration and discarded when the session ends. It holds the session's trusted inputs (the
+user's prompt) and every value in every tool result, each with its server, tool, JSON-RPC request
+ID and tool-call ID. A response is indexed before it is forwarded, so any call the agent makes
+after reading it is matched against it. One index serves all the session's servers, so a value
+server A returned is recognized in a call to server B.
+
+Before each call is forwarded, the index reports which indexed values its arguments contain. A
+value the user also supplied is attributed to the user. The matches are recorded on the call's
+`decision` event (`hindsight.provenance.matches`); Phase 6 will enforce rules on them.
+
+What is indexed is set by `--value-types` (`url`, `email`, `path`, `string`; all by default) and
+`--min-value-length` (the shortest whole string indexed, default 8). Values are lowercased with
+whitespace collapsed. The index itself is the `provenance` package, so the rule engine's replay can
+rebuild it from a trace with identical results. It only matches values the model copies verbatim.
+
 ## Proxy trace
 
 Each session's trace is written to `<trace-dir>/<session-id>/proxy.jsonl` (default `traces/` at the
@@ -71,7 +89,7 @@ Events, numbered in order by `hindsight.seq`:
 | `registration` | the session is registered, with its trusted inputs                           |
 | `descriptors`  | a `tools/list` response passes through, as the server sent it                |
 | `call`         | a `tools/call` request passes through, as the agent sent it                  |
-| `decision`     | right after each call; always `allow` until rules are enforced               |
+| `decision`     | right after each call; always `allow` until rules are enforced, with the provenance matches |
 | `response`     | the call's response passes through, matched to it by JSON-RPC request ID     |
 | `timeout`      | a request got no answer within the upstream timeout; distinct from a block   |
 | `crash`        | the upstream failed or closed while the agent was connected, once per MCP session |
@@ -88,7 +106,7 @@ the HTTP servers (see the root `README.md`), then the gateway:
 
 ```bash
 uv run --package interposer interposer            # http://127.0.0.1:8000
-uv run --package interposer interposer --help     # --config, --trace-dir, --upstream-timeout, ...
+uv run --package interposer interposer --help     # --config, --upstream-timeout, --value-types, ...
 ```
 
 Then run the agent through the launcher (see `apps/launcher/README.md`).
@@ -109,6 +127,7 @@ uv run --package interposer pytest apps/interposer -m "not slow"  # skip the pro
 | `test_sessions.py`    | Phase 2: refusals, the session-to-MCP-session mapping, idle timeout, a dead server |
 | `test_tracing.py`     | Phase 3: the proxy trace, with two calls in flight at once              |
 | `test_processes.py`   | Phase 4 (`slow`): per-session children, timeouts and crashes            |
+| `test_provenance.py`  | Phase 5: values traced across servers, trusted inputs winning, indexed in time |
 
 `test_processes.py` uses the faults test server and skips unless it is set up:
 `uv sync --project apps/mcp-servers/faults`. The helpers the tests share are in

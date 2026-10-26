@@ -32,6 +32,8 @@ from mcp.server.streamable_http import (
     MCP_SESSION_ID_HEADER,
     StreamableHTTPServerTransport,
 )
+from mcp.types import JSONRPCMessage, RequestId
+from provenance import ExtractionConfig
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -40,8 +42,9 @@ from starlette.types import Message, Receive, Scope, Send
 
 from interposer.children import ProcessLauncher, SubprocessLauncher
 from interposer.config import StdioUpstream, Upstream
+from interposer.indexing import ChannelIndexer, matches_to_trace
 from interposer.refused import RefusedLog
-from interposer.relay import UpstreamConnector, UpstreamRelay
+from interposer.relay import MessageObserver, UpstreamConnector, UpstreamRelay
 from interposer.sessions import (
     TRUSTED_INPUT_KINDS,
     ChildStartError,
@@ -66,6 +69,7 @@ def build_app(
     idle_timeout: float,
     upstream_timeout: float,
     launcher: ProcessLauncher | None = None,
+    extraction: ExtractionConfig | None = None,
 ) -> Starlette:
     """Build the gateway app serving every configured upstream server.
 
@@ -77,13 +81,18 @@ def build_app(
         upstream_timeout: Seconds an agent request may wait for its upstream answer
             before the agent gets a timeout error instead.
         launcher: Starts stdio servers' child processes; plain subprocesses by default.
+        extraction: Which values the provenance index extracts; the defaults if None.
     """
     stdio_upstreams = {
         name: u for name, u in upstreams.items() if isinstance(u, StdioUpstream)
     }
     trace_writer = TraceWriter(trace_dir)
     registry = SessionRegistry(
-        idle_timeout, trace_writer, stdio_upstreams, launcher or SubprocessLauncher()
+        idle_timeout,
+        trace_writer,
+        stdio_upstreams,
+        launcher or SubprocessLauncher(),
+        extraction or ExtractionConfig(),
     )
     refused = RefusedLog(log_dir / "refused.jsonl")
     launcher_api = _LauncherApi(registry, trace_writer)
@@ -327,8 +336,16 @@ class _McpEndpoint:
         # Recorded before the opening request is served: the agent sends its next request
         # as soon as it has the session ID, which can be before this request returns.
         session.channels[channel.mcp_session_id] = channel
-        tracer = ChannelTracer(session.trace, server, channel.mcp_session_id)
-        relay_parts = (connect, tracer, self._upstream_timeout)
+        index = session.index
+        assert index is not None, "an active session has an index"
+        tracer = ChannelTracer(
+            session.trace,
+            server,
+            channel.mcp_session_id,
+            match=lambda arguments: matches_to_trace(index.match(arguments)),
+        )
+        indexer = ChannelIndexer(index, server)
+        relay_parts = (connect, tracer, indexer, self._upstream_timeout)
         await self.task_group.start(_run_channel, channel, *relay_parts)
 
         status = await _serve_and_report_status(
@@ -351,6 +368,7 @@ async def _run_channel(
     channel: McpChannel,
     connect: UpstreamConnector,
     tracer: ChannelTracer,
+    indexer: ChannelIndexer,
     upstream_timeout: float,
     *,
     task_status: TaskStatus[None] = anyio.TASK_STATUS_IGNORED,
@@ -371,7 +389,8 @@ async def _run_channel(
             relay = UpstreamRelay(
                 channel.server,
                 connect,
-                observer=tracer,
+                # The indexer first, so a response is indexed before it is traced.
+                observer=_FanOut(indexer, tracer),
                 on_upstream_session=record_upstream_session,
                 timeout=upstream_timeout,
             )
@@ -399,3 +418,26 @@ async def _serve_and_report_status(
 
     await app(scope, receive, send_and_record)
     return status
+
+
+class _FanOut:
+    """Shows every relayed message, timeout and lost upstream to several observers."""
+
+    def __init__(self, *observers: MessageObserver) -> None:
+        self._observers = observers
+
+    def on_agent_message(self, message: JSONRPCMessage) -> None:
+        for observer in self._observers:
+            observer.on_agent_message(message)
+
+    def on_upstream_message(self, message: JSONRPCMessage) -> None:
+        for observer in self._observers:
+            observer.on_upstream_message(message)
+
+    def on_timeout(self, request_id: RequestId) -> None:
+        for observer in self._observers:
+            observer.on_timeout(request_id)
+
+    def on_upstream_lost(self, error_type: str) -> None:
+        for observer in self._observers:
+            observer.on_upstream_lost(error_type)

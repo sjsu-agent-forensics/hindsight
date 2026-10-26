@@ -60,6 +60,8 @@ UPSTREAM_SESSION_ID = "hindsight.mcp.upstream_session.id"
 PAYLOAD = "hindsight.payload"  # the JSON-RPC message, as forwarded
 DECISION = "hindsight.decision"  # "allow" or "block"
 RULE_ID = "hindsight.rule.id"
+# On decision events: per argument, the indexed values it contains and their sources.
+PROVENANCE_MATCHES = "hindsight.provenance.matches"
 TRUSTED_INPUTS = "hindsight.trusted_inputs"
 CONTEXT_TOOL_CALL_IDS = "hindsight.context.tool_call_ids"  # results the model had seen
 

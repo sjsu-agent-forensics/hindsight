@@ -1,0 +1,19 @@
+[project]
+name = "provenance"
+version = "0.1.0"
+description = "Value-matching provenance index: which indexed values a tool call's arguments contain, and their sources"
+readme = "README.md"
+authors = [
+    { name = "ConlynPattison", email = "conlynrp@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"

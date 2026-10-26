@@ -19,6 +19,7 @@ apps/interposer/           MCP gateway between the agent and its tool servers
 apps/launcher/             runs the agent once under a hindsight session registered with the interposer
 apps/mcp-servers/          one directory per MCP tool server, each its own project (not members)
 packages/hindsight-core/   code shared by the apps and demos (imported as `hindsight`)
+packages/provenance/       value-matching provenance index, used by the interposer (and replay)
 packages/trace-schema/     trace event format shared by the interposer and the agent
 demos/                     one directory per demo, each its own package
 traces/                    session traces written at runtime, one directory per session (ignored)
@@ -270,6 +271,7 @@ with `--project`, since servers have their own environments (see "The MCP server
 ```bash
 uv run --package interposer pytest apps/interposer          # add -m "not slow" to skip process tests
 uv run --package trace-schema pytest packages/trace-schema
+uv run --package provenance pytest packages/provenance
 ```
 
 The interposer's tests start everything they need on free ports; only its process tests need

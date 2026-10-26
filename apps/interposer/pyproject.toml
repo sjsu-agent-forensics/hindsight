@@ -11,6 +11,7 @@ dependencies = [
     "anyio>=4.15.0",
     "httpx>=0.28.1",
     "mcp>=1.24,<2",
+    "provenance",
     "starlette>=1.7.0",
     "trace-schema",
     "uvicorn>=0.53.0",
@@ -25,6 +26,7 @@ build-backend = "uv_build"
 
 [tool.uv.sources]
 trace-schema = { workspace = true }
+provenance = { workspace = true }
 
 [dependency-groups]
 dev = [
