@@ -261,6 +261,20 @@ Then confirm it runs:
 uv run --package <demo-name> <demo-name>
 ```
 
+## Testing
+
+Tests use pytest, one suite per project, each in that project's `tests/` folder with `pytest` in
+its `dev` dependency group. Run a workspace member's tests with `--package` and an MCP server's
+with `--project`, since servers have their own environments (see "The MCP server exception"):
+
+```bash
+uv run --package interposer pytest apps/interposer          # add -m "not slow" to skip process tests
+uv run --package trace-schema pytest packages/trace-schema
+```
+
+The interposer's tests start everything they need on free ports; only its process tests need
+`uv sync --project apps/mcp-servers/faults` first, and skip without it. See
+`apps/interposer/README.md` for what each test file covers.
 
 ## Formatting
 

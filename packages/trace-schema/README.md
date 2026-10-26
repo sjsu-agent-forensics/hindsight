@@ -14,3 +14,10 @@ follow the OpenTelemetry GenAI and MCP semantic conventions where one exists (`g
 | `ProxyEventType`, `AgentEventType` | the event types each producer writes |
 | `TOOL_CALL_ID_META_KEY` | the `params._meta` key that joins agent and proxy events |
 | `make_event()`, `dumps()`, `read_events()` | build, serialize and read events |
+| `trace_schema.validate` | check that a session's two traces are complete and join exactly |
+
+## Tests
+
+```bash
+uv run --package trace-schema pytest packages/trace-schema
+```

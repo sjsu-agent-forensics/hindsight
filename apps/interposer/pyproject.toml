@@ -25,3 +25,13 @@ build-backend = "uv_build"
 
 [tool.uv.sources]
 trace-schema = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: runs real child processes and waits out real timeouts (deselect with -m 'not slow')",
+]

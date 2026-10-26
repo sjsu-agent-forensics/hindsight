@@ -93,35 +93,36 @@ uv run --package interposer interposer --help     # --config, --trace-dir, --ups
 
 Then run the agent through the launcher (see `apps/launcher/README.md`).
 
-## Checks
+## Tests
 
-Each script needs the upstream server running.
+The tests run the gateway, and a small HTTP MCP server for it, on free local ports, so they need
+nothing else running. From the repo root:
 
 ```bash
-# Phase 1: tools/list through the gateway must match tools/list direct
-uv run --package interposer python apps/interposer/scripts/check_descriptors.py \
-    http://127.0.0.1:8001/api/mcp http://127.0.0.1:8000 weather
-
-# Phase 1: median per-call latency over persistent sessions, direct vs through the gateway
-uv run --package interposer python apps/interposer/scripts/bench_latency.py \
-    http://127.0.0.1:8001/api/mcp http://127.0.0.1:8000 weather weather_san_jose
-
-# Phase 2: refusals, the session-to-MCP-session mapping, idle timeout, a dead upstream.
-# Starts its own gateway in-process, so it does not need one running.
-uv run --package interposer python apps/interposer/scripts/check_sessions.py \
-    http://127.0.0.1:8001/api/mcp weather_san_jose
-
-# Phase 3: the proxy trace, with two calls in flight at once; also starts its own gateway
-uv run --package interposer python apps/interposer/scripts/check_tracing.py \
-    http://127.0.0.1:8001/api/mcp weather_san_jose
-
-# Phase 3: after a launcher run, check that its two traces are complete and join exactly
-uv run --package interposer python apps/interposer/scripts/check_traces.py traces/<session-id>
-
-# Phase 4: per-session children, timeouts and crashes, against the faults test server.
-# Starts its own gateway and needs no other server: uv sync --project apps/mcp-servers/faults
-uv run --package interposer python apps/interposer/scripts/check_processes.py
+uv run --package interposer pytest apps/interposer                # everything (about 40 s)
+uv run --package interposer pytest apps/interposer -m "not slow"  # skip the process tests
 ```
 
-The first two register a session of their own for the check, so they also need the gateway running.
-`check_traces.py` needs only the trace files; the launcher prints their directory when it ends.
+| File                  | Covers                                                                  |
+| --------------------- | ----------------------------------------------------------------------- |
+| `test_passthrough.py` | Phase 1: `tools/list` through the gateway matches the server; calls relay |
+| `test_sessions.py`    | Phase 2: refusals, the session-to-MCP-session mapping, idle timeout, a dead server |
+| `test_tracing.py`     | Phase 3: the proxy trace, with two calls in flight at once              |
+| `test_processes.py`   | Phase 4 (`slow`): per-session children, timeouts and crashes            |
+
+`test_processes.py` uses the faults test server and skips unless it is set up:
+`uv sync --project apps/mcp-servers/faults`. The helpers the tests share are in
+`interposer.testing`. The trace join itself is tested in `packages/trace-schema`.
+
+Two scripts stay scripts, since they need things a test cannot provide:
+
+```bash
+# median per-call latency, direct vs through a running gateway (needs weather-server running)
+uv run --package interposer python apps/interposer/scripts/bench_latency.py     http://127.0.0.1:8001/api/mcp http://127.0.0.1:8000 weather weather_san_jose
+
+# after a launcher run, check that its two traces are complete and join exactly
+uv run --package interposer python apps/interposer/scripts/check_traces.py traces/<session-id>
+```
+
+A real agent run depends on a model, so its traces are checked after the fact rather than in a
+test; the launcher prints the trace directory when it ends.
