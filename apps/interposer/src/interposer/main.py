@@ -40,6 +40,13 @@ def main() -> None:
         default=30 * 60,
         help="seconds without a request before a session is ended (default: 1800)",
     )
+    parser.add_argument(
+        "--upstream-timeout",
+        type=float,
+        default=30,
+        help="seconds a call may wait for its upstream server before the agent gets a "
+        "timeout error (default: 30)",
+    )
     # Loopback by default: the gateway has no authentication of its own.
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
@@ -49,6 +56,10 @@ def main() -> None:
         level=logging.INFO, format="%(levelname)s %(name)s: %(message)s"
     )
     app = build_app(
-        load_config(args.config), args.log_dir, args.trace_dir, args.idle_timeout
+        load_config(args.config),
+        args.log_dir,
+        args.trace_dir,
+        args.idle_timeout,
+        args.upstream_timeout,
     )
     uvicorn.run(app, host=args.host, port=args.port)

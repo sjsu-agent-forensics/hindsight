@@ -17,6 +17,7 @@ server's tool names and descriptors exactly as that server publishes them, with 
 renaming to avoid collisions.
 """
 
+import functools
 import json
 import logging
 import uuid
@@ -26,6 +27,7 @@ from pathlib import Path
 
 import anyio
 from anyio.abc import TaskGroup, TaskStatus
+from mcp.client.streamable_http import streamable_http_client
 from mcp.server.streamable_http import (
     MCP_SESSION_ID_HEADER,
     StreamableHTTPServerTransport,
@@ -36,11 +38,13 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 from starlette.types import Message, Receive, Scope, Send
 
-from interposer.config import HttpUpstream, StdioUpstream, Upstream
+from interposer.children import ProcessLauncher, SubprocessLauncher
+from interposer.config import StdioUpstream, Upstream
 from interposer.refused import RefusedLog
-from interposer.relay import UpstreamRelay
+from interposer.relay import UpstreamConnector, UpstreamRelay
 from interposer.sessions import (
     TRUSTED_INPUT_KINDS,
+    ChildStartError,
     McpChannel,
     Session,
     SessionExistsError,
@@ -60,6 +64,8 @@ def build_app(
     log_dir: Path,
     trace_dir: Path,
     idle_timeout: float,
+    upstream_timeout: float,
+    launcher: ProcessLauncher | None = None,
 ) -> Starlette:
     """Build the gateway app serving every configured upstream server.
 
@@ -68,36 +74,34 @@ def build_app(
         trace_dir: Directory under which each session gets a directory of trace files.
         idle_timeout: Seconds without a request after which a session the launcher never
             ended is ended.
-
-    Raises:
-        ValueError: A configured server uses stdio, which the gateway does not serve yet.
+        upstream_timeout: Seconds an agent request may wait for its upstream answer
+            before the agent gets a timeout error instead.
+        launcher: Starts stdio servers' child processes; plain subprocesses by default.
     """
-    http_upstreams: dict[str, HttpUpstream] = {}
-    for name, upstream in upstreams.items():
-        if isinstance(upstream, StdioUpstream):
-            raise ValueError(
-                f"Server {name!r} is a stdio server; the gateway serves only HTTP "
-                "upstreams until per-session process management is added"
-            )
-        http_upstreams[name] = upstream
-
+    stdio_upstreams = {
+        name: u for name, u in upstreams.items() if isinstance(u, StdioUpstream)
+    }
     trace_writer = TraceWriter(trace_dir)
-    registry = SessionRegistry(idle_timeout, trace_writer)
+    registry = SessionRegistry(
+        idle_timeout, trace_writer, stdio_upstreams, launcher or SubprocessLauncher()
+    )
     refused = RefusedLog(log_dir / "refused.jsonl")
     launcher_api = _LauncherApi(registry, trace_writer)
-    mcp_endpoint = _McpEndpoint(http_upstreams, registry, refused)
+    mcp_endpoint = _McpEndpoint(upstreams, registry, refused, upstream_timeout)
 
     @asynccontextmanager
     async def lifespan(_app: Starlette) -> AsyncGenerator[None]:
         async with anyio.create_task_group() as tg:
             mcp_endpoint.task_group = tg
+            registry.task_group = tg
             tg.start_soon(trace_writer.run)
             tg.start_soon(registry.expire_idle)
             try:
                 yield
             finally:
-                # End every session (closing its upstream sessions and writing out its
-                # trace) before the relays and the trace writer are cancelled.
+                # End every session (closing its upstream sessions, stopping its children
+                # and writing out its trace) before the relays and the trace writer are
+                # cancelled.
                 await registry.end_all()
                 tg.cancel_scope.cancel()
 
@@ -128,20 +132,24 @@ class _LauncherApi:
     async def register(self, request: Request) -> Response:
         """Register a session from the JSON registration payload.
 
-        Answers 201 with the canonical session ID and the session's trace directory,
-        where the agent's trace belongs too; 400 for an invalid payload; or 409 if the
-        ID was registered before.
+        Starts the session's stdio children before answering. Answers 201 with the
+        canonical session ID and the session's trace directory, where the agent's trace
+        belongs too; 400 for an invalid payload; 409 if the ID was registered before; or
+        502 if a stdio server could not be started, in which case nothing is registered.
         """
         try:
             session_id, trusted_inputs = _parse_registration(await request.json())
         except (json.JSONDecodeError, ValueError) as error:
             return JSONResponse({"error": f"Invalid registration: {error}"}, 400)
         try:
-            self._registry.register(session_id, trusted_inputs)
+            await self._registry.register(session_id, trusted_inputs)
         except SessionExistsError:
             return JSONResponse(
                 {"error": f"Session {session_id} was already registered"}, 409
             )
+        except ChildStartError as error:
+            logger.error("Session %s not registered: %s", session_id, error)
+            return JSONResponse({"error": str(error)}, 502)
         trace_dir = self._trace_writer.session_dir(session_id).resolve()
         return JSONResponse(
             {"session_id": session_id, "trace_dir": str(trace_dir)}, 201
@@ -200,8 +208,8 @@ class _McpEndpoint:
 
     Admits a request only for a registered, active session and a configured server.
     Within a session, a request without an ``Mcp-Session-Id`` opens a new MCP session,
-    relayed to its own upstream session; a request with one is handed to that MCP
-    session's transport.
+    relayed to its own upstream session (an HTTP server) or to the session's own child
+    (a stdio server); a request with one is handed to that MCP session's transport.
 
     A class instance rather than a function, because Starlette wraps a function or
     method endpoint as a request/response handler instead of an ASGI app.
@@ -209,13 +217,15 @@ class _McpEndpoint:
 
     def __init__(
         self,
-        upstreams: dict[str, HttpUpstream],
+        upstreams: dict[str, Upstream],
         registry: SessionRegistry,
         refused: RefusedLog,
+        upstream_timeout: float,
     ) -> None:
         self._upstreams = upstreams
         self._registry = registry
         self._refused = refused
+        self._upstream_timeout = upstream_timeout
         # Set by the app's lifespan; the relays run in it so they outlive the request
         # that opened them.
         self.task_group: TaskGroup | None = None
@@ -249,12 +259,12 @@ class _McpEndpoint:
         await response(scope, receive, send)
 
     async def _serve(
-        self, session: Session, upstream: HttpUpstream, request: Request, send: Send
+        self, session: Session, upstream: Upstream, request: Request, send: Send
     ) -> None:
         """Hand an admitted request to its MCP session, opening one if it has no ID."""
         mcp_session_id = request.headers.get(MCP_SESSION_ID_HEADER)
         if mcp_session_id is None:
-            await self._open_channel(session, upstream, request, send)
+            await self._open(session, upstream, request, send)
             return
         channel = session.channels.get(mcp_session_id)
         if channel is None or channel.server != upstream.name:
@@ -266,23 +276,60 @@ class _McpEndpoint:
             return
         await channel.transport.handle_request(request.scope, request.receive, send)
 
-    async def _open_channel(
-        self, session: Session, upstream: HttpUpstream, request: Request, send: Send
+    async def _open(
+        self, session: Session, upstream: Upstream, request: Request, send: Send
     ) -> None:
+        """Open an MCP session to an HTTP server, or claim the session's stdio child.
+
+        A stdio child serves one MCP session per hindsight session and is never
+        restarted, so a second attempt is refused and logged.
+        """
+        if not isinstance(upstream, StdioUpstream):
+            connect = functools.partial(streamable_http_client, upstream.url)
+            await self._open_channel(session, upstream.name, connect, request, send)
+            return
+        child = session.children[upstream.name]
+        if child.claimed:
+            response = await self._refused.refuse(
+                request,
+                409,
+                "stdio_server_in_use",
+                f"MCP server {upstream.name!r} already served an MCP session in this "
+                "hindsight session",
+            )
+            await response(request.scope, request.receive, send)
+            return
+        child.claimed = True
+        opened = await self._open_channel(
+            session, upstream.name, child.connector, request, send
+        )
+        if not opened:
+            # The opening request never reached the child, so it is still unused.
+            child.claimed = False
+
+    async def _open_channel(
+        self,
+        session: Session,
+        server: str,
+        connect: UpstreamConnector,
+        request: Request,
+        send: Send,
+    ) -> bool:
         """Open a new MCP session in ``session`` and serve its opening request.
 
         The opening request must be ``initialize``; the transport refuses anything else.
-        If the request is not answered with success, the MCP session is dropped and not
-        recorded.
+        Returns whether the MCP session opened. If the request is not answered with
+        success, the MCP session is dropped and not recorded.
         """
         assert self.task_group is not None, "the app's lifespan has not started"
         transport = StreamableHTTPServerTransport(mcp_session_id=uuid.uuid4().hex)
-        channel = McpChannel(server=upstream.name, transport=transport)
+        channel = McpChannel(server=server, transport=transport)
         # Recorded before the opening request is served: the agent sends its next request
         # as soon as it has the session ID, which can be before this request returns.
         session.channels[channel.mcp_session_id] = channel
-        tracer = ChannelTracer(session.trace, upstream.name, channel.mcp_session_id)
-        await self.task_group.start(_run_channel, channel, upstream, tracer)
+        tracer = ChannelTracer(session.trace, server, channel.mcp_session_id)
+        relay_parts = (connect, tracer, self._upstream_timeout)
+        await self.task_group.start(_run_channel, channel, *relay_parts)
 
         status = await _serve_and_report_status(
             transport.handle_request, request.scope, request.receive, send
@@ -290,19 +337,21 @@ class _McpEndpoint:
         if status is None or status >= 400:
             del session.channels[channel.mcp_session_id]
             await transport.terminate()
-            return
+            return False
         logger.info(
             "Session %s: opened MCP session %s on %r",
             session.id,
             channel.mcp_session_id,
-            upstream.name,
+            server,
         )
+        return True
 
 
 async def _run_channel(
     channel: McpChannel,
-    upstream: HttpUpstream,
+    connect: UpstreamConnector,
     tracer: ChannelTracer,
+    upstream_timeout: float,
     *,
     task_status: TaskStatus[None] = anyio.TASK_STATUS_IGNORED,
 ) -> None:
@@ -320,9 +369,11 @@ async def _run_channel(
         async with channel.transport.connect() as (agent_read, agent_write):
             task_status.started()
             relay = UpstreamRelay(
-                upstream,
+                channel.server,
+                connect,
                 observer=tracer,
                 on_upstream_session=record_upstream_session,
+                timeout=upstream_timeout,
             )
             await relay.run(agent_read, agent_write)
     finally:

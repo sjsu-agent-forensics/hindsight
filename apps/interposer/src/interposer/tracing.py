@@ -119,8 +119,9 @@ class ChannelTracer:
     """Turns one MCP session's relayed messages into proxy trace events.
 
     The relay calls ``on_agent_message`` and ``on_upstream_message`` for every message,
-    before forwarding it. Requests are remembered by JSON-RPC ID, so each response is
-    matched to its own request even when several calls are in flight at once.
+    before forwarding it, and reports the calls it answers itself (timeouts, a lost
+    upstream). Requests are remembered by JSON-RPC ID, so each answer is matched to its
+    own request even when several calls are in flight at once.
     """
 
     def __init__(self, trace: SessionTrace, server: str, mcp_session_id: str) -> None:
@@ -128,18 +129,18 @@ class ChannelTracer:
         self._server = server
         self._mcp_session_id = mcp_session_id
         self.upstream_session_id: str | None = None
-        self._list_requests: set[RequestId] = set()
+        # Each in-flight request's method, so a timeout can say what timed out.
+        self._methods: dict[RequestId, str] = {}
         # Each in-flight tools/call: its tool name and the agent's tool-call ID.
         self._calls: dict[RequestId, tuple[str | None, str | None]] = {}
 
     def on_agent_message(self, message: JSONRPCMessage) -> None:
-        """Record a ``tools/call`` request and its decision; remember ``tools/list``."""
+        """Record a ``tools/call`` request and its decision; remember every request."""
         request = message.root
         if not isinstance(request, JSONRPCRequest):
             return
-        if request.method == "tools/list":
-            self._list_requests.add(request.id)
-        elif request.method == "tools/call":
+        self._methods[request.id] = request.method
+        if request.method == "tools/call":
             params = request.params or {}
             meta = params.get("_meta")
             tool_call_id = (
@@ -159,21 +160,39 @@ class ChannelTracer:
         response = message.root
         if not isinstance(response, JSONRPCResponse | JSONRPCError):
             return
-        if response.id in self._list_requests:
-            self._list_requests.discard(response.id)
-            fields = {
-                **self._session_fields(),
-                ts.MCP_METHOD: "tools/list",
-                ts.JSONRPC_REQUEST_ID: str(response.id),
-            }
+        method = self._methods.pop(response.id, None)
+        if method == "tools/list":
+            fields = self._request_fields(response.id, method)
             self._trace.emit("descriptors", {**fields, ts.PAYLOAD: _dump(message)})
-        elif response.id in self._calls:
+        elif method == "tools/call":
             tool, tool_call_id = self._calls.pop(response.id)
             fields = self._call_fields(response.id, tool, tool_call_id)
             error_type = _error_type(response)
             if error_type is not None:
                 fields[ts.ERROR_TYPE] = error_type
             self._trace.emit("response", {**fields, ts.PAYLOAD: _dump(message)})
+
+    def on_timeout(self, request_id: RequestId) -> None:
+        """Record that a request got no upstream answer in time.
+
+        The agent got a timeout error instead. A timeout is not a block: the call's
+        decision was ``allow`` and it was forwarded; the upstream just never answered.
+        """
+        method = self._methods.pop(request_id, None)
+        if method == "tools/call":
+            tool, tool_call_id = self._calls.pop(request_id)
+            fields = self._call_fields(request_id, tool, tool_call_id)
+        else:
+            fields = self._request_fields(request_id, method)
+        self._trace.emit("timeout", {**fields, ts.ERROR_TYPE: "timeout"})
+
+    def on_upstream_lost(self, error_type: str) -> None:
+        """Record that the upstream failed or closed; its calls fail from now on.
+
+        ``error_type`` is the failure's exception type, or ``closed`` when the upstream
+        simply went away (a stdio child exiting, for example).
+        """
+        self._trace.emit("crash", {**self._session_fields(), ts.ERROR_TYPE: error_type})
 
     def _session_fields(self) -> dict[str, Any]:
         return {
@@ -182,13 +201,20 @@ class ChannelTracer:
             ts.UPSTREAM_SESSION_ID: self.upstream_session_id,
         }
 
+    def _request_fields(
+        self, request_id: RequestId, method: str | None
+    ) -> dict[str, Any]:
+        return {
+            **self._session_fields(),
+            ts.MCP_METHOD: method,
+            ts.JSONRPC_REQUEST_ID: str(request_id),
+        }
+
     def _call_fields(
         self, request_id: RequestId, tool: str | None, tool_call_id: str | None
     ) -> dict[str, Any]:
         return {
-            **self._session_fields(),
-            ts.MCP_METHOD: "tools/call",
-            ts.JSONRPC_REQUEST_ID: str(request_id),
+            **self._request_fields(request_id, "tools/call"),
             ts.TOOL_NAME: tool,
             ts.TOOL_CALL_ID: tool_call_id,
         }

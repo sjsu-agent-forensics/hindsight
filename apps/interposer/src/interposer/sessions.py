@@ -9,15 +9,18 @@ has one proxy trace, which is complete once the session has ended.
 import logging
 import time
 import uuid
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Literal, get_args
 
 import anyio
 import trace_schema as ts
+from anyio.abc import TaskGroup
 from mcp.server.streamable_http import StreamableHTTPServerTransport
 
+from interposer.children import ProcessLauncher, StdioChild
+from interposer.config import StdioUpstream
 from interposer.tracing import SessionTrace, TraceWriter
 
 logger = logging.getLogger(__name__)
@@ -64,15 +67,17 @@ class McpChannel:
 
 @dataclass
 class Session:
-    """One registered hindsight session and the MCP sessions opened under it.
+    """One registered hindsight session, its stdio children and its MCP sessions.
 
     ``channels`` keeps every MCP session ever opened under this session, including ones
-    already closed, so the mapping survives for the record.
+    already closed, so the mapping survives for the record. ``children`` holds the
+    session's own process for each stdio server, keyed by server name.
     """
 
     id: str
     trusted_inputs: list[TrustedInput]
     trace: SessionTrace
+    children: dict[str, StdioChild] = field(default_factory=dict)
     channels: dict[str, McpChannel] = field(default_factory=dict)
     ended_by: EndedBy | None = None
     closed: anyio.Event = field(default_factory=anyio.Event)
@@ -118,6 +123,14 @@ class SessionExistsError(Exception):
     """A session with this ID was already registered, whether or not it has ended."""
 
 
+class ChildStartError(Exception):
+    """A stdio server's process could not be started for a new session."""
+
+    def __init__(self, server: str, cause: Exception) -> None:
+        super().__init__(f"Could not start MCP server {server!r}: {cause}")
+        self.server = server
+
+
 def normalize_session_id(raw: str) -> str | None:
     """Return the canonical lowercase form of a UUID session ID, or None if invalid."""
     try:
@@ -133,23 +146,47 @@ class SessionRegistry:
     session rather than an unknown one, and an ID is never registered twice.
     """
 
-    def __init__(self, idle_timeout: float, trace_writer: TraceWriter) -> None:
+    def __init__(
+        self,
+        idle_timeout: float,
+        trace_writer: TraceWriter,
+        stdio_upstreams: dict[str, StdioUpstream],
+        launcher: ProcessLauncher,
+    ) -> None:
         self._sessions: dict[str, Session] = {}
+        # IDs whose registration is starting children, so a concurrent registration of
+        # the same ID is refused too.
+        self._registering: set[str] = set()
         self._idle_timeout = idle_timeout
         self._trace_writer = trace_writer
+        self._stdio_upstreams = stdio_upstreams
+        self._launcher = launcher
+        # Set by the app's lifespan; children run in it so they outlive the request
+        # that registered their session.
+        self.task_group: TaskGroup | None = None
 
-    def register(self, session_id: str, trusted_inputs: list[TrustedInput]) -> Session:
-        """Register a new session.
+    async def register(
+        self, session_id: str, trusted_inputs: list[TrustedInput]
+    ) -> Session:
+        """Register a new session, starting its own child for every stdio server.
 
         Raises:
             SessionExistsError: The ID was registered before.
+            ChildStartError: A stdio server could not be started. Any children already
+                started are stopped, and the session is not registered.
         """
-        if session_id in self._sessions:
+        if session_id in self._sessions or session_id in self._registering:
             raise SessionExistsError(session_id)
+        self._registering.add(session_id)
+        try:
+            children = await self._start_children()
+        finally:
+            self._registering.discard(session_id)
         session = Session(
             id=session_id,
             trusted_inputs=trusted_inputs,
             trace=SessionTrace(session_id, self._trace_writer),
+            children=children,
         )
         self._sessions[session_id] = session
         # Replay rebuilds the trusted-input index entries from this event.
@@ -169,19 +206,22 @@ class SessionRegistry:
         return self._sessions.get(session_id)
 
     async def end(self, session: Session, ended_by: EndedBy) -> None:
-        """End a session, close every MCP session under it, and complete its trace.
+        """End a session: close its MCP sessions, stop its children, complete its trace.
 
-        Returns once its upstream sessions are closed (or after a timeout if an upstream
-        does not respond) and every trace event is written, so the trace is complete
-        when this returns. Safe to call more than once and concurrently: the first call
-        decides ``ended_by``, and every call waits for the same close.
+        Returns once its upstream sessions are closed and its children have exited (or
+        after a timeout for any that do not) and every trace event is written, so the
+        trace is complete when this returns. Safe to call more than once and
+        concurrently: the first call decides ``ended_by``, and every call waits for the
+        same close.
         """
         if session.ended_by is None:
             session.ended_by = ended_by
             logger.info("Ending session %s (%s)", session.id, ended_by)
             await self._close_channels(session)
-            # After the channels: closing them can still produce events.
             with anyio.CancelScope(shield=True):
+                # After the channels, so a child's exit is never mistaken for a crash.
+                await _stop_children(session.children.values())
+                # Last: closing channels can still produce events.
                 await self._trace_writer.flush()
             session.closed.set()
         await session.closed.wait()
@@ -209,6 +249,21 @@ class SessionRegistry:
                 ):
                     await self.end(session, "idle_timeout")
 
+    async def _start_children(self) -> dict[str, StdioChild]:
+        """Start one child per stdio server, or none at all if any fails to start."""
+        assert self.task_group is not None, "the app's lifespan has not started"
+        started: dict[str, StdioChild] = {}
+        for name, upstream in self._stdio_upstreams.items():
+            child = StdioChild(upstream, self._launcher)
+            try:
+                await self.task_group.start(child.run)
+            except Exception as error:
+                with anyio.CancelScope(shield=True):
+                    await _stop_children(started.values())
+                raise ChildStartError(name, error) from error
+            started[name] = child
+        return started
+
     async def _close_channels(self, session: Session) -> None:
         # Terminating a transport closes the relay's streams, which ends the relay and
         # with it the upstream session. Shielded so a cancelled caller still closes them.
@@ -224,3 +279,11 @@ class SessionRegistry:
                     session.id,
                     _CLOSE_TIMEOUT_SECONDS,
                 )
+
+
+async def _stop_children(children: Iterable[StdioChild]) -> None:
+    """Stop children concurrently and wait for each to exit, up to its timeout."""
+
+    async with anyio.create_task_group() as tg:
+        for child in children:
+            tg.start_soon(child.stop)

@@ -196,7 +196,11 @@ async def _run(server_url: str, tool: str) -> int:
     with tempfile.TemporaryDirectory() as log_dir:
         port = _free_port()
         app = build_app(
-            upstreams, Path(log_dir), Path(log_dir) / "traces", _IDLE_TIMEOUT
+            upstreams,
+            Path(log_dir),
+            Path(log_dir) / "traces",
+            _IDLE_TIMEOUT,
+            upstream_timeout=30,
         )
         server = uvicorn.Server(
             uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning")

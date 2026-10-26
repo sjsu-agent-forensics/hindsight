@@ -79,13 +79,15 @@ below).
 ## Running the agent
 
 The agent in `apps/agent` reaches its tools only through the interposer, and only within a
-hindsight session, which the launcher registers for each run. Start the tool servers it uses (see
-below) and the interposer, each in its own terminal, then run the agent through the launcher:
+hindsight session, which the launcher registers for each run. It uses both tool servers: the
+interposer runs `math-server` itself, as each session's own child process, so only
+`weather-server` needs starting. Set both up once (see below), then start `weather-server` and the
+interposer, each in its own terminal, and run the agent through the launcher:
 
 ```bash
 uv run --project apps/mcp-servers/weather weather-server   # http://127.0.0.1:8001/api/mcp
 uv run --package interposer interposer                     # http://127.0.0.1:8000
-uv run --package launcher launcher "What's the weather in San Jose?"
+uv run --package launcher launcher "What's (3 + 5) x 12? What's the weather in San Jose?"
 ```
 
 See the READMEs in `apps/agent`, `apps/interposer` and `apps/launcher` for options and the
@@ -103,14 +105,16 @@ uv sync --project apps/mcp-servers/weather
 
 The two use different transports, which is what decides whether you start them by hand:
 
-| server           | transport | address                          | started by      |
-| ---------------- | --------- | -------------------------------- | --------------- |
-| `math-server`    | stdio     | none -- stdin/stdout             | the demo        |
-| `weather-server` | http      | `http://127.0.0.1:8001/api/mcp`  | you, beforehand |
+| server           | transport | address                          | started by                          |
+| ---------------- | --------- | -------------------------------- | ----------------------------------- |
+| `math-server`    | stdio     | none -- stdin/stdout             | the demo, or the interposer         |
+| `weather-server` | http      | `http://127.0.0.1:8001/api/mcp`  | you, beforehand                     |
+| `faults-server`  | stdio     | none -- stdin/stdout             | the interposer's Phase 4 check only |
 
-`math-server` speaks stdio, so `mcp-enabled-agent` spawns it as a subprocess and you never start it
-yourself. It launches the console script out of that server's own `.venv`, which is what keeps the
-two incompatible `mcp` versions apart, so the `uv sync` above is what makes it work.
+`math-server` speaks stdio, so whoever uses it spawns it as a subprocess and you never start it
+yourself: `mcp-enabled-agent` directly, or the interposer once per session for `apps/agent`. Both
+launch the console script out of that server's own `.venv`, which is what keeps the two
+incompatible `mcp` versions apart, so the `uv sync` above is what makes it work.
 
 `weather-server` listens on a port and runs until you stop it, so start it in its own terminal
 before the demo:

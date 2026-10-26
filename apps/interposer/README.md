@@ -4,8 +4,32 @@ The hindsight proxy: one gateway process between the agent and every MCP server 
 relays every JSON-RPC message both ways unchanged, and admits only traffic that belongs to a
 registered hindsight session.
 
-Upstream servers are listed in [`servers.toml`](servers.toml). Only remote HTTP servers are served
-for now; stdio servers are refused at startup until per-session process management is added.
+Upstream servers are listed in [`servers.toml`](servers.toml), in one of three forms:
+
+| Keys                 | Server                                                                         |
+| -------------------- | ------------------------------------------------------------------------------ |
+| `url`                | a remote server, reached over streamable HTTP                                  |
+| `project`, `program` | a uv project's console script, found in that project's `.venv` on any OS      |
+| `command`, `args`    | any command, for example `docker run -i --rm <image>` for a containerized server |
+
+The last two are stdio servers. The agent cannot tell them from HTTP ones: every server is served
+to it over HTTP at the same kind of path.
+
+## Stdio servers
+
+Each session gets its own child process for every stdio server, started when the session is
+registered (registration fails with HTTP 502 if one cannot start) and stopped when it ends. No
+server state carries between runs. The child is stopped with its whole process tree: the MCP SDK
+uses a Windows job object, or a process group on POSIX.
+
+A child serves one MCP session. A second MCP session to the same stdio server within one hindsight
+session is refused with HTTP 409 and logged. A child is never restarted: if it dies, the gateway
+records a `crash` event and every later call to it fails with an "unavailable" error for the rest
+of the session.
+
+A FastMCP server can take several seconds to answer its first request (4–6 s measured on
+Windows), all of it the server's own startup. Starting children at registration lets that overlap
+with the agent's startup.
 
 ## Sessions
 
@@ -31,8 +55,10 @@ Requests with no session prefix, or for an unknown or ended session, are refused
 (so an agent pointed at a bad session fails at startup) and written to `logs/refused.jsonl`, one
 JSON object per line. Refused traffic is never part of any session.
 
-If an upstream server fails or closes mid-session, the agent's MCP session stays open but every
-call to that server returns an "unavailable" error, rather than hanging.
+Every upstream call has a timeout (`--upstream-timeout`, default 30 s). On expiry the agent gets an
+MCP error, the gateway records a `timeout` event, and a late answer from the server is dropped. If
+an upstream server fails or closes mid-session, the agent's MCP session stays open but every call
+to that server returns an "unavailable" error, rather than hanging.
 
 ## Proxy trace
 
@@ -47,6 +73,8 @@ Events, numbered in order by `hindsight.seq`:
 | `call`         | a `tools/call` request passes through, as the agent sent it                  |
 | `decision`     | right after each call; always `allow` until rules are enforced               |
 | `response`     | the call's response passes through, matched to it by JSON-RPC request ID     |
+| `timeout`      | a request got no answer within the upstream timeout; distinct from a block   |
+| `crash`        | the upstream failed or closed while the agent was connected, once per MCP session |
 
 Every event for a call carries the agent's tool-call ID (`gen_ai.tool.call.id`), copied from the
 request's `params._meta`, which is how the agent trace joins this one. Events are written by a
@@ -55,11 +83,12 @@ disk, so the trace is complete when the launcher's end call returns.
 
 ## Running it
 
-Start the upstream servers first (see the root `README.md`), then the gateway:
+Set up each stdio server's environment once (`uv sync --project apps/mcp-servers/math`) and start
+the HTTP servers (see the root `README.md`), then the gateway:
 
 ```bash
 uv run --package interposer interposer            # http://127.0.0.1:8000
-uv run --package interposer interposer --help     # --config, --log-dir, --trace-dir, --idle-timeout, ...
+uv run --package interposer interposer --help     # --config, --trace-dir, --upstream-timeout, ...
 ```
 
 Then run the agent through the launcher (see `apps/launcher/README.md`).
@@ -88,6 +117,10 @@ uv run --package interposer python apps/interposer/scripts/check_tracing.py \
 
 # Phase 3: after a launcher run, check that its two traces are complete and join exactly
 uv run --package interposer python apps/interposer/scripts/check_traces.py traces/<session-id>
+
+# Phase 4: per-session children, timeouts and crashes, against the faults test server.
+# Starts its own gateway and needs no other server: uv sync --project apps/mcp-servers/faults
+uv run --package interposer python apps/interposer/scripts/check_processes.py
 ```
 
 The first two register a session of their own for the check, so they also need the gateway running.

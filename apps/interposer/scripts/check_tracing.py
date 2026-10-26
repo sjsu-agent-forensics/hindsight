@@ -138,6 +138,7 @@ async def _run(server_url: str, tool: str) -> int:
             Path(temp_dir) / "logs",
             Path(temp_dir) / "traces",
             idle_timeout=60,
+            upstream_timeout=30,
         )
         server = uvicorn.Server(
             uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning")

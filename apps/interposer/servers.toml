@@ -1,8 +1,16 @@
-# Upstream MCP servers the interposer fronts, each served at /mcp/<name>.
+# Upstream MCP servers the interposer fronts, each served at /s/<session-id>/mcp/<name>.
 #
-# A server sets either `url` (a remote server reached over streamable HTTP) or `command`
-# and optional `args` (a local server spawned over stdio). The gateway refuses stdio
-# servers until per-session process management is added, so math-server is not listed yet.
+# A server sets one of:
+#   url                   a remote server reached over streamable HTTP
+#   project + program     a uv project's console script, run as each session's own child
+#                         process over stdio (project is relative to this file)
+#   command (+ args)      any command run as each session's child, e.g. `docker run -i ...`
+#
+# Stdio servers need their environment set up first: uv sync --project <project>.
 
 [servers.weather]
 url = "http://127.0.0.1:8001/api/mcp"
+
+[servers.math]
+project = "../mcp-servers/math"
+program = "math-server"

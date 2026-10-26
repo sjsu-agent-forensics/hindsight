@@ -7,3 +7,8 @@
 
 [servers.weather]
 url = "http://127.0.0.1:8000/s/{session_id}/mcp/weather"
+
+# A stdio server, but the agent cannot tell: the interposer runs it as this session's own
+# child process and serves it over HTTP like any other.
+[servers.math]
+url = "http://127.0.0.1:8000/s/{session_id}/mcp/math"
