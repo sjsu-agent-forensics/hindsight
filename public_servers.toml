@@ -1,0 +1,23 @@
+# Declarative configuration for third-party public MCP tool servers.
+#
+# Network topology requirement:
+# Every listener is strictly bound to the loopback address (127.0.0.1) and reached only
+# through the MCP interposer. Control endpoints are on port + 100 (/control).
+#
+# Add third-party servers after the evaluation domain, permissions, and synthetic fixture
+# strategy are finalized. Keep this file portable: use environment-variable placeholders for
+# secrets and avoid host-specific paths.
+
+# -----------------------------------------------------------------------------
+# 1. Reference Mock Public Server (Offline CI & Local Verification)
+# -----------------------------------------------------------------------------
+[public_servers.mock]
+transport = "stdio"
+command = "python"
+args = ["-m", "public_bridge.mock_server"]
+port = 8021
+control_port = 8121
+host = "127.0.0.1"
+sandbox_mode = "ephemeral_dir"
+startup_timeout = 15.0
+

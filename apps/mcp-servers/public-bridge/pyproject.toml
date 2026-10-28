@@ -1,0 +1,27 @@
+[project]
+name = "public-bridge"
+version = "0.1.0"
+description = "Bridge and lifecycle framework connecting third-party public MCP tools to hindsight"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=4.0.8",
+    "starlette>=1.7.0",
+    "uvicorn>=0.53.0",
+    "anyio>=4.15.0",
+]
+
+[project.scripts]
+public-bridge = "public_bridge.main:main"
+public-mock-server = "public_bridge.mock_server:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.28.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"

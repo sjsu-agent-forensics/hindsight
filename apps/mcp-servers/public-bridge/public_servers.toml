@@ -1,0 +1,74 @@
+# Declarative configuration for third-party public MCP tool servers.
+#
+# Network topology requirement:
+# Every listener is strictly bound to the loopback address (127.0.0.1) and reached only
+# through the MCP interposer. Control endpoints are on port + 100 (/control).
+#
+# When the evaluation domain is finalized, enable or configure the domain-specific public
+# tools below.
+
+# -----------------------------------------------------------------------------
+# 1. Reference Mock Public Server (Offline CI & Local Verification)
+# -----------------------------------------------------------------------------
+[public_servers.mock]
+transport = "stdio"
+command = "python"
+args = ["-m", "public_bridge.mock_server"]
+port = 8021
+control_port = 8121
+host = "127.0.0.1"
+sandbox_mode = "ephemeral_dir"
+startup_timeout = 15.0
+
+# -----------------------------------------------------------------------------
+# 2. Filesystem Public MCP Tool (Template for evaluation domain)
+#    Package: @modelcontextprotocol/server-filesystem
+# -----------------------------------------------------------------------------
+# [public_servers.filesystem]
+# transport = "stdio"
+# command = "npx"
+# args = ["-y", "@modelcontextprotocol/server-filesystem", "./sandbox"]
+# port = 8022
+# control_port = 8122
+# host = "127.0.0.1"
+# sandbox_mode = "ephemeral_dir"
+
+# -----------------------------------------------------------------------------
+# 3. Web Fetch Public MCP Tool (Template for evaluation domain)
+#    Package: mcp-server-fetch
+# -----------------------------------------------------------------------------
+# [public_servers.fetch]
+# transport = "stdio"
+# command = "uvx"
+# args = ["mcp-server-fetch"]
+# port = 8023
+# control_port = 8123
+# host = "127.0.0.1"
+# sandbox_mode = "stateless"
+
+# -----------------------------------------------------------------------------
+# 4. SQLite Database Public MCP Tool (Template for evaluation domain)
+#    Package: mcp-server-sqlite
+# -----------------------------------------------------------------------------
+# [public_servers.sqlite]
+# transport = "stdio"
+# command = "uvx"
+# args = ["mcp-server-sqlite", "--db-path", "./data.db"]
+# port = 8024
+# control_port = 8124
+# host = "127.0.0.1"
+# sandbox_mode = "ephemeral_dir"
+
+# -----------------------------------------------------------------------------
+# 5. GitHub Public MCP Tool (Template for evaluation domain)
+#    Package: @modelcontextprotocol/server-github
+# -----------------------------------------------------------------------------
+# [public_servers.github]
+# transport = "stdio"
+# command = "npx"
+# args = ["-y", "@modelcontextprotocol/server-github"]
+# env = { GITHUB_PERSONAL_ACCESS_TOKEN = "${GITHUB_TOKEN}" }
+# port = 8025
+# control_port = 8125
+# host = "127.0.0.1"
+# sandbox_mode = "stateless"

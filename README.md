@@ -15,6 +15,7 @@ virtual environment at the root, shared by every member.
 
 ```
 apps/mcp-servers/          one directory per MCP tool server, each its own project (not members)
+  public-bridge/           bridges selected third-party MCP tools behind the interposer
 packages/hindsight-core/   code shared by the demos (imported as `hindsight`)
 demos/                     one directory per demo, each its own package
 ```
@@ -76,6 +77,7 @@ and each needs its own one-time setup:
 ```bash
 uv sync --project apps/mcp-servers/math
 uv sync --project apps/mcp-servers/weather
+uv sync --project apps/mcp-servers/public-bridge
 ```
 
 The two use different transports, which is what decides whether you start them by hand:
@@ -101,6 +103,19 @@ Then run the agent from a second terminal:
 ```bash
 uv run --package mcp-enabled-agent mcp-enabled-agent
 ```
+
+### Public MCP tools
+
+`apps/mcp-servers/public-bridge` is the framework for connecting selected third-party MCP tools.
+Each bridge exposes a loopback-only Streamable HTTP endpoint for the interposer and a local
+control endpoint for orchestrator session setup and cleanup. The checked-in `public_servers.toml`
+contains only an offline reference server; add public server configurations after choosing the
+evaluation tools, permissions, and synthetic fixture strategy. See the bridge README for
+configuration and launcher commands.
+
+The bridge's sandbox and effect log are session-scoped. Stateful upstream tools must be
+configured to store their data in that sandbox for their own state to be reset between runs. Keep
+the agent's MCP configuration pointed only at the interposer's session URL.
 
 Only one process can hold port 8001; if the server fails with `error while attempting to bind`,
 another copy is already running.
