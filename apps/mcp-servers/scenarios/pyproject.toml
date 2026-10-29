@@ -1,0 +1,22 @@
+[project]
+name = "scenario-servers"
+version = "0.1.0"
+description = "Attack test servers for the interposer's end-to-end scenarios: injected pages, a poisoned descriptor, private notes and a mail sink"
+readme = "README.md"
+authors = [
+    { name = "ConlynPattison", email = "conlynrp@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=4.0.8",
+]
+
+[project.scripts]
+scenario-browser = "scenario_servers.browser:main"
+scenario-mail = "scenario_servers.mail:main"
+scenario-notes = "scenario_servers.notes:main"
+scenario-forecast = "scenario_servers.forecast:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"

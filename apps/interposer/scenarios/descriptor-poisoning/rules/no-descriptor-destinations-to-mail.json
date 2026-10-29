@@ -1,0 +1,7 @@
+{
+  "id": "no-descriptor-destinations-to-mail",
+  "effect": "deny",
+  "source": {"kind": "descriptor"},
+  "sink": {"server": "mail"},
+  "value_types": ["email", "url"]
+}

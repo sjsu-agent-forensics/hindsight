@@ -1,0 +1,18 @@
+# The attack test servers the scenarios draw from (apps/mcp-servers/scenarios), each run as
+# the session's own stdio child. A scenario lists which of them its agent gets.
+
+[servers.browser]
+project = "../../mcp-servers/scenarios"
+program = "scenario-browser"
+
+[servers.mail]
+project = "../../mcp-servers/scenarios"
+program = "scenario-mail"
+
+[servers.notes]
+project = "../../mcp-servers/scenarios"
+program = "scenario-notes"
+
+[servers.forecast]
+project = "../../mcp-servers/scenarios"
+program = "scenario-forecast"

@@ -1,0 +1,6 @@
+{
+  "id": "no-notes-to-mail",
+  "effect": "deny",
+  "source": {"kind": "tool", "server": "notes"},
+  "sink": {"server": "mail", "tool": "send_email"}
+}

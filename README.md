@@ -125,6 +125,7 @@ They use different transports, which is what decides whether you start them by h
 | `chat-server`     | http      | `http://127.0.0.1:8016/api/mcp` | you, beforehand                     |
 | `calendar-server` | http      | `http://127.0.0.1:8017/api/mcp` | you, beforehand                     |
 | `faults-server`   | stdio     | none -- stdin/stdout            | the interposer's Phase 4 check only |
+| `scenario-*`      | stdio     | none -- stdin/stdout            | the interposer's attack scenarios only |
 
 The internal servers (`email`, `web`, `drive`, `chat`, `calendar`) give the agent a synthetic
 workspace: it acts as the assistant of Alex Morgan at the fictional company Northwind. Their 35
