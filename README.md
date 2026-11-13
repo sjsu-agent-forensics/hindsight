@@ -106,12 +106,12 @@ uv run --package mcp-enabled-agent mcp-enabled-agent
 
 ### Public MCP tools
 
-`apps/mcp-servers/public-bridge` is the framework for connecting selected third-party MCP tools.
+`apps/mcp-servers/public-bridge` is the framework for connecting selected third-party MCP tools,
+configured for the personal workspace domain (Google Drive, Google Calendar, and Gmail).
 Each bridge exposes a loopback-only Streamable HTTP endpoint for the interposer and a local
 control endpoint for orchestrator session setup and cleanup. The checked-in `public_servers.toml`
-contains only an offline reference server; add public server configurations after choosing the
-evaluation tools, permissions, and synthetic fixture strategy. See the bridge README for
-configuration and launcher commands.
+defines personal workspace servers along with an offline reference mock server. See the bridge
+README (`apps/mcp-servers/public-bridge/README.md`) for configuration and launcher commands.
 
 The bridge's sandbox and effect log are session-scoped. Stateful upstream tools must be
 configured to store their data in that sandbox for their own state to be reset between runs. Keep

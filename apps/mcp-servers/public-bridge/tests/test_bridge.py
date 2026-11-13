@@ -1,4 +1,4 @@
-"""End-to-end tests for PublicBridgeServer exposing tools over Streamable HTTP."""
+"""End-to-end tests for PublicBridgeServer exposing personal workspace tools over Streamable HTTP."""
 
 import json
 from pathlib import Path
@@ -14,7 +14,7 @@ from public_bridge.stdio_process import StdioProcessClient
 
 @pytest.mark.asyncio
 async def test_bridge_streamable_http(tmp_path: Path) -> None:
-    """Test tools/list and tools/call over the HTTP bridge using mock server."""
+    """Test tools/list and tools/call over the HTTP bridge using mock workspace server."""
     cfg = StdioPublicServerConfig(
         name="mock",
         command=sys.executable,
@@ -62,17 +62,18 @@ async def test_bridge_streamable_http(tmp_path: Path) -> None:
                 session_id = init_resp.headers.get("mcp-session-id")
                 headers = {"mcp-session-id": session_id} if session_id else {}
 
-                # 2. tools/list
+                # 2. tools/list — verify personal workspace tools are exposed
                 list_resp = await client.post(
                     "/api/mcp",
                     headers=headers,
                     json={"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
                 )
                 assert list_resp.status_code == 200
-                assert "fetch" in list_resp.text
-                assert "read_file" in list_resp.text
+                assert "gdrive_search" in list_resp.text
+                assert "gcalendar_list_events" in list_resp.text
+                assert "gmail_search" in list_resp.text
 
-                # 3. tools/call
+                # 3. tools/call — search Google Drive
                 call_resp = await client.post(
                     "/api/mcp",
                     headers=headers,
@@ -81,17 +82,17 @@ async def test_bridge_streamable_http(tmp_path: Path) -> None:
                         "id": 3,
                         "method": "tools/call",
                         "params": {
-                            "name": "fetch",
-                            "arguments": {"url": "http://127.0.0.1:8000/report"},
+                            "name": "gdrive_search",
+                            "arguments": {"query": "planning"},
                         },
                     },
                 )
                 assert call_resp.status_code == 200
-                assert "Simulated content fetched" in call_resp.text
+                assert "Q4 Planning Notes" in call_resp.text
 
                 # 4. Verify effect recorded in sandbox
                 effects = sandbox_mgr.get_or_create("default").effects
                 assert len(effects) == 1
-                assert effects[0]["tool"] == "fetch"
+                assert effects[0]["tool"] == "gdrive_search"
     finally:
         await bridge.close()

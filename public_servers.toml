@@ -1,12 +1,22 @@
 # Declarative configuration for third-party public MCP tool servers.
 #
+# Domain: Personal Workspace
+# Connects to Google Drive, Google Calendar, and Gmail MCP servers so hindsight
+# can observe and evaluate agent interactions with a user's personal workspace.
+#
 # Network topology requirement:
 # Every listener is strictly bound to the loopback address (127.0.0.1) and reached only
 # through the MCP interposer. Control endpoints are on port + 100 (/control).
 #
-# Add third-party servers after the evaluation domain, permissions, and synthetic fixture
-# strategy are finalized. Keep this file portable: use environment-variable placeholders for
-# secrets and avoid host-specific paths.
+# Authentication:
+# All Google Workspace servers require OAuth 2.0 credentials. Set the following
+# environment variables before launching:
+#   GOOGLE_OAUTH_CREDENTIALS - Path to gcp-oauth.keys.json (Desktop OAuth client)
+#
+# Quick start:
+#   1. Set up OAuth credentials (see apps/mcp-servers/public-bridge/README.md)
+#   2. export GOOGLE_OAUTH_CREDENTIALS=/path/to/gcp-oauth.keys.json
+#   3. python scripts/launch_public_servers.py
 
 # -----------------------------------------------------------------------------
 # 1. Reference Mock Public Server (Offline CI & Local Verification)
@@ -21,3 +31,47 @@ host = "127.0.0.1"
 sandbox_mode = "ephemeral_dir"
 startup_timeout = 15.0
 
+# -----------------------------------------------------------------------------
+# 2. Google Drive — File search, read, and management
+#    Package: @anthropic/mcp-server-gdrive
+# -----------------------------------------------------------------------------
+[public_servers.gdrive]
+transport = "stdio"
+command = "npx"
+args = ["-y", "@anthropic/mcp-server-gdrive"]
+env = { GOOGLE_OAUTH_CREDENTIALS = "${GOOGLE_OAUTH_CREDENTIALS:-./gcp-oauth.keys.json}" }
+port = 8022
+control_port = 8122
+host = "127.0.0.1"
+sandbox_mode = "stateless"
+startup_timeout = 30.0
+
+# -----------------------------------------------------------------------------
+# 3. Google Calendar — Event search, creation, and schedule management
+#    Package: @cocal/google-calendar-mcp
+# -----------------------------------------------------------------------------
+[public_servers.gcalendar]
+transport = "stdio"
+command = "npx"
+args = ["-y", "@cocal/google-calendar-mcp"]
+env = { GOOGLE_OAUTH_CREDENTIALS = "${GOOGLE_OAUTH_CREDENTIALS:-./gcp-oauth.keys.json}" }
+port = 8023
+control_port = 8123
+host = "127.0.0.1"
+sandbox_mode = "stateless"
+startup_timeout = 30.0
+
+# -----------------------------------------------------------------------------
+# 4. Gmail — Email search, reading, drafting, and sending
+#    Package: @gongrzhe/server-gmail-autoauth-mcp
+# -----------------------------------------------------------------------------
+[public_servers.gmail]
+transport = "stdio"
+command = "npx"
+args = ["-y", "@gongrzhe/server-gmail-autoauth-mcp"]
+env = { GOOGLE_OAUTH_CREDENTIALS = "${GOOGLE_OAUTH_CREDENTIALS:-./gcp-oauth.keys.json}" }
+port = 8024
+control_port = 8124
+host = "127.0.0.1"
+sandbox_mode = "stateless"
+startup_timeout = 30.0

@@ -1,4 +1,4 @@
-"""Integration tests for StdioProcessClient communicating with mock public tool server."""
+"""Integration tests for StdioProcessClient communicating with mock workspace server."""
 
 import sys
 import pytest
@@ -21,34 +21,68 @@ async def test_stdio_lifecycle() -> None:
         # Liveness ping
         assert await client.ping() is True
 
-        # Tool discovery
+        # Tool discovery — verify personal workspace tools
         tools = await client.list_tools()
         tool_names = [t["name"] for t in tools]
-        assert "fetch" in tool_names
-        assert "read_file" in tool_names
-        assert "write_file" in tool_names
+        assert "gdrive_search" in tool_names
+        assert "gdrive_read_file" in tool_names
+        assert "gdrive_list_files" in tool_names
+        assert "gcalendar_list_events" in tool_names
+        assert "gcalendar_create_event" in tool_names
+        assert "gmail_search" in tool_names
+        assert "gmail_read" in tool_names
+        assert "gmail_draft" in tool_names
 
-        # Call fetch tool
-        fetch_res = await client.call_tool(
-            "fetch", {"url": "https://api.example.com/data"}
+        # Call gdrive_search tool
+        search_res = await client.call_tool(
+            "gdrive_search", {"query": "budget"}
         )
-        content = fetch_res.get("content", [])
+        content = search_res.get("content", [])
         assert len(content) > 0
-        assert "https://api.example.com/data" in content[0]["text"]
+        assert "Budget 2026" in content[0]["text"]
 
-        # Call write_file and read_file tools
-        import tempfile
-        from pathlib import Path
+        # Call gdrive_read_file tool
+        read_res = await client.call_tool(
+            "gdrive_read_file", {"file_id": "doc_001"}
+        )
+        read_content = read_res.get("content", [])
+        assert len(read_content) > 0
+        assert "Q4 Planning Notes" in read_content[0]["text"]
 
-        with tempfile.TemporaryDirectory() as td:
-            target_path = str(Path(td) / "test.txt")
-            write_res = await client.call_tool(
-                "write_file", {"path": target_path, "content": "forensics payload"}
-            )
-            assert "written" in write_res["content"][0]["text"]
+        # Call gcalendar_list_events tool
+        events_res = await client.call_tool("gcalendar_list_events", {})
+        events_content = events_res.get("content", [])
+        assert len(events_content) > 0
+        assert "Team Standup" in events_content[0]["text"]
 
-            read_res = await client.call_tool("read_file", {"path": target_path})
-            assert read_res["content"][0]["text"] == "forensics payload"
+        # Call gmail_search tool
+        mail_res = await client.call_tool(
+            "gmail_search", {"query": "planning"}
+        )
+        mail_content = mail_res.get("content", [])
+        assert len(mail_content) > 0
+        assert "Q4 Planning" in mail_content[0]["text"]
+
+        # Call gmail_read tool
+        read_mail_res = await client.call_tool(
+            "gmail_read", {"message_id": "msg_001"}
+        )
+        read_mail_content = read_mail_res.get("content", [])
+        assert len(read_mail_content) > 0
+        assert "bob@example.com" in read_mail_content[0]["text"]
+
+        # Call gmail_draft tool
+        draft_res = await client.call_tool(
+            "gmail_draft",
+            {
+                "to": "bob@example.com",
+                "subject": "Re: Q4 Planning",
+                "body": "Thanks for the feedback!",
+            },
+        )
+        draft_content = draft_res.get("content", [])
+        assert len(draft_content) > 0
+        assert "draft" in draft_content[0]["text"].lower()
     finally:
         await client.stop()
         assert not client.is_running

@@ -47,12 +47,12 @@ def test_control_endpoints(tmp_path: Path) -> None:
     assert "exp_session_42" in resp.json()["sessions"]
 
     # 5. Record effect and read back effects log
-    mgr.record_effect("exp_session_42", "fetch", url="http://127.0.0.1")
+    mgr.record_effect("exp_session_42", "gdrive_search", query="budget")
     resp = client.get("/control/sessions/exp_session_42/effects")
     assert resp.status_code == 200
     effects = resp.json()["effects"]
     assert len(effects) == 1
-    assert effects[0]["action"] == "fetch"
+    assert effects[0]["action"] == "gdrive_search"
 
     # 6. Discard session
     resp = client.delete("/control/sessions/exp_session_42")

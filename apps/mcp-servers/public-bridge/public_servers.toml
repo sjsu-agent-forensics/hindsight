@@ -1,11 +1,25 @@
 # Declarative configuration for third-party public MCP tool servers.
 #
+# Domain: Personal Workspace
+# Connects to Google Drive, Google Calendar, and Gmail MCP servers so hindsight
+# can observe and evaluate agent interactions with a user's personal workspace.
+#
 # Network topology requirement:
 # Every listener is strictly bound to the loopback address (127.0.0.1) and reached only
 # through the MCP interposer. Control endpoints are on port + 100 (/control).
 #
-# When the evaluation domain is finalized, enable or configure the domain-specific public
-# tools below.
+# Authentication:
+# All Google Workspace servers require OAuth 2.0 credentials. Set the following
+# environment variables before launching:
+#   GOOGLE_OAUTH_CREDENTIALS - Path to gcp-oauth.keys.json (Desktop OAuth client)
+#   GOOGLE_ACCESS_TOKEN      - Pre-authenticated access token (optional, for HTTP transport)
+#
+# To create OAuth credentials:
+#   1. Create a Google Cloud project at https://console.cloud.google.com
+#   2. Enable the Drive API, Calendar API, and Gmail API
+#   3. Configure the OAuth consent screen (add yourself as a test user)
+#   4. Create an OAuth Client ID (Desktop application type)
+#   5. Download the credentials JSON and set GOOGLE_OAUTH_CREDENTIALS to its path
 
 # -----------------------------------------------------------------------------
 # 1. Reference Mock Public Server (Offline CI & Local Verification)
@@ -21,54 +35,86 @@ sandbox_mode = "ephemeral_dir"
 startup_timeout = 15.0
 
 # -----------------------------------------------------------------------------
-# 2. Filesystem Public MCP Tool (Template for evaluation domain)
-#    Package: @modelcontextprotocol/server-filesystem
+# 2. Google Drive — File search, read, and management
+#    Package: @modelcontextprotocol/server-gdrive
+#    API Docs: https://developers.google.com/drive/api
+#
+#    Tools: gdrive_search, gdrive_read_file, gdrive_list_files
+#    Converts: Docs→Markdown, Sheets→CSV, Slides→PlainText, Drawings→PNG
+#
+#    Requires: Google Drive API enabled, GOOGLE_OAUTH_CREDENTIALS set
 # -----------------------------------------------------------------------------
-# [public_servers.filesystem]
-# transport = "stdio"
-# command = "npx"
-# args = ["-y", "@modelcontextprotocol/server-filesystem", "./sandbox"]
-# port = 8022
-# control_port = 8122
-# host = "127.0.0.1"
-# sandbox_mode = "ephemeral_dir"
+[public_servers.gdrive]
+transport = "stdio"
+command = "npx"
+args = ["-y", "@anthropic/mcp-server-gdrive"]
+env = { GOOGLE_OAUTH_CREDENTIALS = "${GOOGLE_OAUTH_CREDENTIALS:-./gcp-oauth.keys.json}" }
+port = 8022
+control_port = 8122
+host = "127.0.0.1"
+sandbox_mode = "stateless"
+startup_timeout = 30.0
 
 # -----------------------------------------------------------------------------
-# 3. Web Fetch Public MCP Tool (Template for evaluation domain)
-#    Package: mcp-server-fetch
+# 3. Google Calendar — Event search, creation, and schedule management
+#    Package: @cocal/google-calendar-mcp
+#    API Docs: https://developers.google.com/calendar/api
+#
+#    Tools: list_calendars, list_events, create_event, update_event, delete_event,
+#           find_free_time
+#
+#    Requires: Google Calendar API enabled, GOOGLE_OAUTH_CREDENTIALS set
 # -----------------------------------------------------------------------------
-# [public_servers.fetch]
-# transport = "stdio"
-# command = "uvx"
-# args = ["mcp-server-fetch"]
-# port = 8023
-# control_port = 8123
-# host = "127.0.0.1"
-# sandbox_mode = "stateless"
+[public_servers.gcalendar]
+transport = "stdio"
+command = "npx"
+args = ["-y", "@cocal/google-calendar-mcp"]
+env = { GOOGLE_OAUTH_CREDENTIALS = "${GOOGLE_OAUTH_CREDENTIALS:-./gcp-oauth.keys.json}" }
+port = 8023
+control_port = 8123
+host = "127.0.0.1"
+sandbox_mode = "stateless"
+startup_timeout = 30.0
 
 # -----------------------------------------------------------------------------
-# 4. SQLite Database Public MCP Tool (Template for evaluation domain)
-#    Package: mcp-server-sqlite
+# 4. Gmail — Email search, reading, drafting, and sending
+#    Package: @gongrzhe/server-gmail-autoauth-mcp
+#    API Docs: https://developers.google.com/gmail/api
+#
+#    Tools: gmail_search, gmail_read, gmail_draft, gmail_send, gmail_list_labels,
+#           gmail_manage_labels, gmail_download_attachment
+#
+#    Requires: Gmail API enabled, GOOGLE_OAUTH_CREDENTIALS set
+#    First run: npx @gongrzhe/server-gmail-autoauth-mcp auth
 # -----------------------------------------------------------------------------
-# [public_servers.sqlite]
-# transport = "stdio"
-# command = "uvx"
-# args = ["mcp-server-sqlite", "--db-path", "./data.db"]
-# port = 8024
-# control_port = 8124
-# host = "127.0.0.1"
-# sandbox_mode = "ephemeral_dir"
+[public_servers.gmail]
+transport = "stdio"
+command = "npx"
+args = ["-y", "@gongrzhe/server-gmail-autoauth-mcp"]
+env = { GOOGLE_OAUTH_CREDENTIALS = "${GOOGLE_OAUTH_CREDENTIALS:-./gcp-oauth.keys.json}" }
+port = 8024
+control_port = 8124
+host = "127.0.0.1"
+sandbox_mode = "stateless"
+startup_timeout = 30.0
 
 # -----------------------------------------------------------------------------
-# 5. GitHub Public MCP Tool (Template for evaluation domain)
-#    Package: @modelcontextprotocol/server-github
+# 5. Google Drive (Remote/HTTP) — Google's hosted MCP endpoint
+#    Endpoint: https://drivemcp.googleapis.com/mcp/v1
+#    Docs: https://developers.google.com/drive/api/guides/mcp
+#
+#    Alternative to the stdio gdrive server above. Uses Google's managed remote
+#    MCP server over Streamable HTTP. Requires Workspace Developer Preview access
+#    and an OAuth access token.
+#
+#    Tools: search_files, list_recent_files, get_file_metadata, read_file_content,
+#           create_file, copy_file, get_file_permissions, download_file_content
 # -----------------------------------------------------------------------------
-# [public_servers.github]
-# transport = "stdio"
-# command = "npx"
-# args = ["-y", "@modelcontextprotocol/server-github"]
-# env = { GITHUB_PERSONAL_ACCESS_TOKEN = "${GITHUB_TOKEN}" }
+# [public_servers.gdrive-remote]
+# transport = "http"
+# target_url = "https://drivemcp.googleapis.com/mcp/v1"
+# headers = { Authorization = "Bearer ${GOOGLE_ACCESS_TOKEN}" }
 # port = 8025
 # control_port = 8125
 # host = "127.0.0.1"
-# sandbox_mode = "stateless"
+# startup_timeout = 30.0
