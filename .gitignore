@@ -202,6 +202,7 @@ cython_debug/
 # .vscode/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
+.vscode/
 
 # Ruff stuff:
 .ruff_cache/
@@ -216,3 +217,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Interposer runtime logs (refused traffic; session traces later)
+apps/interposer/logs/
+
+# Session traces (proxy and agent)
+traces/
