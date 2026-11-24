@@ -1,8 +1,8 @@
 """Seeded generator for the fake customer database.
 
 Every value comes from `random.Random(seed)` and the fixed word lists below, with no third-party
-faker, so the same seed gives the same people on every machine and every library version (N-07).
-The people are synthetic (N-06): emails use the reserved example.* domains and phone numbers the
+faker, so the same seed gives the same people on every machine and every library version (N-07). The
+people are synthetic (N-06): emails use the reserved example.* domains and phone numbers the
 fictional 555-01xx range.
 """
 

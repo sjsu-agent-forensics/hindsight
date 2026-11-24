@@ -1,7 +1,7 @@
 """Test helpers: run a server for real on free local ports and talk to it over HTTP.
 
-The in-memory fastmcp client cannot send request headers, so session handling can only be
-tested through a real HTTP connection.
+The in-memory fastmcp client cannot send request headers, so session handling can only be tested
+through a real HTTP connection.
 """
 
 import asyncio
@@ -88,7 +88,8 @@ def running(server: FastMCP, store: SessionStore) -> Iterator[RunningServer]:
 
 
 def call(client: Client, tool: str, args: dict[str, Any] | None = None) -> Any:
-    """Open `client`, call `tool` and return its structured result; a tool error raises ToolError."""
+    """Open `client`, call `tool` and return its structured result; a tool error raises
+    ToolError."""
 
     async def go():
         async with client:

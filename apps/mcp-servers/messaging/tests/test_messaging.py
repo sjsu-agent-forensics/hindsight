@@ -34,7 +34,9 @@ def test_post_to_external_channel_is_flagged(live):
     live.seed("s-post")
     live.seed("s-other")
     posted = live.call(
-        "post_message", {"channel": "ext-ergo-supplies", "text": "Can you send the EC-200 restock date?"}, "s-post"
+        "post_message",
+        {"channel": "ext-ergo-supplies", "text": "Can you send the EC-200 restock date?"},
+        "s-post",
     )
     assert posted == {"posted": True, "channel": "ext-ergo-supplies", "message_id": "m_007"}
     channel = live.call("read_channel", {"channel": "ext-ergo-supplies"}, "s-post")

@@ -14,7 +14,7 @@ records-server = "records_server.main:main"
 records-generate = "records_server.generate:main"
 
 [tool.uv.sources]
-hindsight-server-kit = { path = "../kit", editable = true }
+hindsight-server-kit = { path = "../../../packages/hindsight-server-kit", editable = true }
 
 [dependency-groups]
 dev = [

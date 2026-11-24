@@ -1,8 +1,8 @@
 """MCP tool server for the user's mailbox: reading, searching and sending email.
 
-Incoming emails are untrusted content (subjects, bodies, sender names). Nothing is actually
-sent: a sent email is stored in the session's "sent" folder and logged in the effect log, which
-is how the evaluator sees what the agent sent.
+Incoming emails are untrusted content (subjects, bodies, sender names). Nothing is actually sent: a
+sent email is stored in the session's "sent" folder and logged in the effect log, which is how the
+evaluator sees what the agent sent.
 """
 
 from datetime import datetime
@@ -18,13 +18,13 @@ BENIGN = Path(__file__).parent / "fixtures" / "benign.json"
 FOLDERS = ("inbox", "sent")
 
 
-def load_mailbox(path: Path | None) -> dict[str, Any]:
+def _load_mailbox(path: Path | None) -> dict[str, Any]:
     """Load a session's mailbox: the benign fixture, or a fixture file / overlay on it."""
     return load_json_fixture(path, BENIGN)
 
 
 server = FastMCP("Email Server")
-store = SessionStore("email", load_mailbox)
+store = SessionStore("email", _load_mailbox)
 
 
 # Tool names and docstrings below are published to clients as the MCP tool name and
@@ -53,8 +53,10 @@ def read_email(email_id: str) -> dict:
 
 @server.tool()
 def search_emails(query: str) -> dict:
-    """Search all folders for emails whose subject, body or sender contains the query
-    (case-insensitive). Returns up to 20 matches, newest first, without their bodies."""
+    """Search all folders for emails whose subject, body or sender contains the query.
+
+    Matching is case-insensitive. Returns up to 20 matches, newest first, without their bodies.
+    """
     needle = query.lower()
     session = store.get()
     with session.lock:

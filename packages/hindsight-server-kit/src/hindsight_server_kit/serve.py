@@ -6,6 +6,7 @@ import contextlib
 import json
 import signal
 import sys
+from collections.abc import Iterator
 
 import uvicorn
 from fastmcp import FastMCP
@@ -23,8 +24,8 @@ CONTROL_PORT_OFFSET = 100
 def serve(server: FastMCP, store: SessionStore, *, port: int, host: str = "127.0.0.1") -> None:
     """Parse the command line, then serve until interrupted, or print the manifest and exit.
 
-    Binds 127.0.0.1 by default: these servers hold the confidential test data, and the
-    interposer refuses anything but local HTTP upstreams anyway.
+    Binds 127.0.0.1 by default: these servers hold the confidential test data, and the interposer
+    refuses anything but local HTTP upstreams anyway.
     """
     parser = argparse.ArgumentParser(prog=f"{store.name}-server", description=server.name)
     parser.add_argument("--manifest", action="store_true", help="print tools/list as JSON and exit")
@@ -52,12 +53,12 @@ class _Server(uvicorn.Server):
     """A uvicorn server that leaves signal handling to `_serve_both`.
 
     Each uvicorn server normally takes over Ctrl-C while it runs and re-raises it when it stops.
-    With two in one process, that re-raised signal lands in the other one's shutdown and prints
-    a traceback, so both get one shared handler instead.
+    With two in one process, that re-raised signal lands in the other one's shutdown and prints a
+    traceback, so both get one shared handler instead.
     """
 
     @contextlib.contextmanager
-    def capture_signals(self):
+    def capture_signals(self) -> Iterator[None]:
         yield
 
 

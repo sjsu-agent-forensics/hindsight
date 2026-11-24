@@ -435,6 +435,9 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
+    { name = "httpx2" },
+    { name = "starlette" },
+    { name = "uvicorn" },
 ]
 
 [package.dev-dependencies]
@@ -443,7 +446,12 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fastmcp", specifier = ">=4.0.8" }]
+requires-dist = [
+    { name = "fastmcp", specifier = ">=4.0.8" },
+    { name = "httpx2", specifier = ">=2.15.1" },
+    { name = "starlette", specifier = ">=1.9.0" },
+    { name = "uvicorn", specifier = ">=0.54.0" },
+]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8" }]

@@ -1,16 +1,16 @@
 """Start the HTTP MCP tool servers in one terminal and wait until each is listening.
 
-Runs `uv run --project apps/mcp-servers/<name> <name>-server` for each server, prefixes every
-line a server prints with its name, and stops them all on Ctrl-C or as soon as one of them exits.
-`math-server` is not started: it speaks stdio and is spawned by the demo that uses it.
+Runs `uv run --project apps/mcp-servers/<name> <name>-server` for each server, prefixes every line a
+server prints with its name, and stops them all on Ctrl-C or as soon as one of them exits. `math-
+server` is not started: it speaks stdio and is spawned by the demo that uses it.
 
 Usage, from the repo root:
 
-    python scripts/launch_servers.py                # every server below
-    python scripts/launch_servers.py records clock  # only these
+python scripts/launch_servers.py                # every server below python
+scripts/launch_servers.py records clock  # only these
 
-Standard library only, so any Python 3.12+ runs it; it does not need the workspace environment.
-This is a stand-in for the orchestrator, which will take over starting the servers.
+Standard library only, so any Python 3.12+ runs it; it does not need the workspace environment. This
+is a stand-in for the orchestrator, which will take over starting the servers.
 """
 
 import argparse
@@ -40,6 +40,7 @@ class Server:
 
     @property
     def ports(self) -> list[int]:
+        """Return every port the server listens on: MCP first, then control if it has one."""
         return [self.port] + ([self.control_port] if self.control_port else [])
 
 
@@ -58,21 +59,8 @@ SERVERS = [
 
 def main() -> None:
     """Start the chosen servers, report where they are, and wait for Ctrl-C."""
-    by_name = {s.name: s for s in SERVERS}
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("names", nargs="*", metavar="server", help=", ".join(by_name))
-    args = parser.parse_args()
-    unknown = [n for n in args.names if n not in by_name]
-    if unknown:
-        parser.error(f"unknown server {', '.join(unknown)}; choose from {', '.join(by_name)}")
-    chosen = [by_name[n] for n in args.names] if args.names else SERVERS
-
-    # Refuse up front if a port is taken: the server would fail anyway, after a slower start.
-    busy = [(s, p) for s in chosen for p in s.ports if _listening(p)]
-    if busy:
-        for s, p in busy:
-            print(f"Port {p} ({s.name}) is already in use; is {s.name}-server already running?")
-        sys.exit(1)
+    chosen = _parse_args()
+    _check_ports(chosen)
 
     processes: dict[str, subprocess.Popen] = {}
     interrupted = False
@@ -81,17 +69,41 @@ def main() -> None:
             processes[s.name] = _start(s)
         _wait_until_ready(chosen, processes)
         _print_summary(chosen)
-        # Serve until Ctrl-C or until any server exits on its own.
-        while all(p.poll() is None for p in processes.values()):
-            time.sleep(0.5)
-        for name, p in processes.items():
-            if p.returncode is not None:
-                print(f"{name}-server exited with code {p.returncode}; stopping the others.")
+        _wait_for_exit(processes)
     except KeyboardInterrupt:
         interrupted = True
         print("\nStopping servers...")
     finally:
         _stop(processes, grace=5 if interrupted else 0)
+
+
+def _parse_args() -> list[Server]:
+    by_name = {s.name: s for s in SERVERS}
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("names", nargs="*", metavar="server", help=", ".join(by_name))
+    args = parser.parse_args()
+    unknown = [n for n in args.names if n not in by_name]
+    if unknown:
+        parser.error(f"unknown server {', '.join(unknown)}; choose from {', '.join(by_name)}")
+    return [by_name[n] for n in args.names] if args.names else SERVERS
+
+
+def _check_ports(servers: list[Server]) -> None:
+    # Refuse up front if a port is taken: the server would fail anyway, after a slower start.
+    busy = [(s, p) for s in servers for p in s.ports if _listening(p)]
+    if busy:
+        for s, p in busy:
+            print(f"Port {p} ({s.name}) is already in use; is {s.name}-server already running?")
+        sys.exit(1)
+
+
+def _wait_for_exit(processes: dict[str, subprocess.Popen]) -> None:
+    # Polling, because there is no portable way to wait on several child processes at once.
+    while all(p.poll() is None for p in processes.values()):
+        time.sleep(0.5)
+    for name, p in processes.items():
+        if p.returncode is not None:
+            print(f"{name}-server exited with code {p.returncode}; stopping the others.")
 
 
 def _start(server: Server) -> subprocess.Popen:

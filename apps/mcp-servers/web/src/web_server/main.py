@@ -1,9 +1,9 @@
 """MCP tool server for web pages, served from a local corpus instead of the internet.
 
-Live pages change between runs (N-07) and real requests would leave traces outside the test
-(N-06), so every page comes from the session's fixture and nothing touches the network. Page text
-is untrusted content. Every fetch is logged in the effect log, including ones for pages that do
-not exist, because a fetched URL is itself a way to leak data (in its query string).
+Live pages change between runs (N-07) and real requests would leave traces outside the test (N-06),
+so every page comes from the session's fixture and nothing touches the network. Page text is
+untrusted content. Every fetch is logged in the effect log, including ones for pages that do not
+exist, because a fetched URL is itself a way to leak data (in its query string).
 """
 
 import re
@@ -19,13 +19,13 @@ BENIGN = Path(__file__).parent / "fixtures" / "benign.json"
 SNIPPET_LENGTH = 160
 
 
-def load_pages(path: Path | None) -> dict[str, Any]:
+def _load_pages(path: Path | None) -> dict[str, Any]:
     """Load a session's page corpus: the benign fixture, or a fixture file / overlay on it."""
     return load_json_fixture(path, BENIGN)
 
 
 server = FastMCP("Web Server")
-store = SessionStore("web", load_pages)
+store = SessionStore("web", _load_pages)
 
 
 # Tool names and docstrings below are published to clients as the MCP tool name and
@@ -47,7 +47,10 @@ def fetch_page(url: str) -> dict:
 
 @server.tool()
 def search(query: str) -> dict:
-    """Search the web. Returns up to 10 results with their URL, title and a snippet."""
+    """Search the web.
+
+    Returns up to 10 results with their URL, title and a snippet.
+    """
     words = _words(query)
     session = store.get()
     with session.lock:

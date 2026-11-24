@@ -1,15 +1,10 @@
-"""Fixture files for the JSON-backed servers, and overlays that change a few items of the benign one.
+"""Fixture files for the JSON-backed servers, and overlays on the benign one.
 
-A server's fixture is a JSON object whose lists hold items with a stable id (`email_id`,
-`file_id`, ...). A fixture file either replaces the benign fixture outright, or starts from it:
-
-    {
-      "base": "benign",
-      "add":   {"emails": [{"email_id": "e_900", ...}]},   # appended to that list
-      "patch": {"e_003": {"body": "..."}}                   # fields replaced on that item
-    }
-
-`patch` finds an item by its id in any list, so an overlay names only the items it changes.
+A server's fixture is a JSON object whose lists hold items with a stable id (`email_id`, `file_id`,
+...). A fixture file either replaces the benign fixture outright, or starts from it with `"base":
+"benign"`, appends the items under `add` to the named lists, and replaces fields on the items named
+under `patch`. `patch` finds an item by its id in any list, so an overlay names only the items it
+changes. See the kit's README.md for an example.
 """
 
 import copy
@@ -20,7 +15,12 @@ from hindsight_server_kit.session import read_json
 
 
 def load_json_fixture(path: Path | None, benign: Path) -> dict[str, Any]:
-    """Return the fixture at `path`, or the server's benign fixture for None."""
+    """Return the fixture at `path`, or the server's benign fixture for None.
+
+    Raises:
+        ValueError: The file is not valid JSON, or an overlay adds to something that is not a list
+            or patches an id that is not in the benign fixture.
+    """
     benign_data = read_json(benign)
     if path is None:
         return benign_data
@@ -31,7 +31,12 @@ def load_json_fixture(path: Path | None, benign: Path) -> dict[str, Any]:
 
 
 def apply_overlay(data: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
-    """Return a copy of `data` with the overlay's `add` and `patch` applied."""
+    """Return a copy of `data` with the overlay's `add` and `patch` applied.
+
+    Raises:
+        ValueError: The overlay adds to a key that is not a list in `data`, or patches an id that
+            is not in `data`.
+    """
     data = copy.deepcopy(data)
     for key, items in overlay.get("add", {}).items():
         if not isinstance(data.get(key), list):

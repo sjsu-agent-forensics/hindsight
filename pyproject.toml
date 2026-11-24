@@ -7,17 +7,24 @@ requires-python = ">=3.12"
 
 [tool.uv.workspace]
 members = ["packages/*", "demos/*"]
-# MCP servers need mcp 2.x (fastmcp 4); the rest of the workspace is pinned to mcp 1.x
-# by langchain-mcp-adapters. Each server is its own project with its own .venv -- see the README.
-exclude = ["apps/mcp-servers/*"]
+# MCP servers and their kit need mcp 2.x (fastmcp 4); the rest of the workspace is pinned to mcp
+# 1.x by langchain-mcp-adapters. Each server is its own project with its own .venv -- see the
+# README.
+exclude = ["apps/mcp-servers/*", "packages/hindsight-server-kit"]
 
 [tool.uv]
 package = false
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
 
 [tool.docformatter]
 black = true
 recursive = true
 exclude = [".venv"]
+wrap-summaries = 100
+wrap-descriptions = 100
 
 [dependency-groups]
 dev = [

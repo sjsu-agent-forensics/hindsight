@@ -1,7 +1,7 @@
 """MCP tool server for the user's documents: a second internal source, and a chain through state.
 
-File contents are untrusted content. `write_file` and `share_file` change state, so both go into
-the effect log; a file written in one call and read back in another is the shared-state chain the
+File contents are untrusted content. `write_file` and `share_file` change state, so both go into the
+effect log; a file written in one call and read back in another is the shared-state chain the
 registry's `reads`/`writes` labels exist to catch. Paths are plain keys into the session's file
 list, never real paths on disk, so nothing here can touch the host's filesystem.
 """
@@ -17,13 +17,13 @@ PORT = 8014
 BENIGN = Path(__file__).parent / "fixtures" / "benign.json"
 
 
-def load_files(path: Path | None) -> dict[str, Any]:
+def _load_files(path: Path | None) -> dict[str, Any]:
     """Load a session's files: the benign fixture, or a fixture file / overlay on it."""
     return load_json_fixture(path, BENIGN)
 
 
 server = FastMCP("Files Server")
-store = SessionStore("files", load_files)
+store = SessionStore("files", _load_files)
 
 
 # Tool names and docstrings below are published to clients as the MCP tool name and

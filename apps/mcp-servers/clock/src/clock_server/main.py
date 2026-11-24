@@ -1,8 +1,8 @@
 """MCP tool server giving the agent the date and time, fixed per scenario.
 
 Replaces the in-process `get_local_datetime` tool, the last one the agent ran outside MCP. It
-answers with the session's scenario time rather than the wall clock, so a rerun from reset sees
-the same time as the original run (N-07).
+answers with the session's scenario time rather than the wall clock, so a rerun from reset sees the
+same time as the original run (N-07).
 """
 
 from fastmcp import FastMCP

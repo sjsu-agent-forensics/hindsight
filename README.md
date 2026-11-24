@@ -14,8 +14,9 @@ A [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): one l
 virtual environment at the root, shared by every member.
 
 ```
-apps/mcp-servers/          one directory per MCP tool server, each its own project (not members)
-packages/hindsight-core/   code shared by the demos (imported as `hindsight`)
+apps/mcp-servers/              one directory per MCP tool server, each its own project (not members)
+packages/hindsight-core/       code shared by the demos (imported as `hindsight`)
+packages/hindsight-server-kit/ code shared by the internal MCP servers (not a member; see below)
 demos/                     one directory per demo, each its own package
 ```
 
@@ -36,6 +37,7 @@ apps/
     ...
 packages/
   hindsight-core/     shared basics (LLM factory, config)
+  hindsight-server-kit/  sessions, control endpoint, effect log for the internal MCP servers
   rule-engine/        rule vocabulary + evaluator, used by interposer AND forensics
   trace-schema/       session/event record format, used by agent, interposer, forensics
 demos/                current baseline demos, kept as reference
@@ -100,11 +102,12 @@ The two use different transports, which is what decides whether you start them b
 | `calendar-server`  | http      | `http://127.0.0.1:8017/api/mcp` | you, beforehand |
 
 The internal servers (`records`, `email`, `web`, `files`, `clock`, `messaging`, `calendar`) are
-built on the shared `hindsight-server-kit` (`apps/mcp-servers/kit/`, a library, not a server).
+built on the shared `hindsight-server-kit` (`packages/hindsight-server-kit/`, a library, not a
+server).
 Each keeps its data per session, picked by a `Hindsight-Session` request header, and also serves a
 control endpoint on its MCP port plus 100 (8111 to 8117) for seeding, reading back and discarding
 sessions. A request with no header uses one default state, so the `fastmcp` commands below work on
-them unchanged. See `apps/mcp-servers/kit/README.md`. Run each server's tests with
+them unchanged. See `packages/hindsight-server-kit/README.md`. Run each server's tests with
 `uv run --project apps/mcp-servers/<name> pytest apps/mcp-servers/<name>`.
 
 `math-server` speaks stdio, so `mcp-enabled-agent` spawns it as a subprocess and you never start it
@@ -169,8 +172,8 @@ form.
 
 ## The MCP server exception
 
-`apps/mcp-servers/*` is listed under `exclude` in the root `[tool.uv.workspace]`, and each server
-there has its own `.venv`. This is deliberate, and the one place the single-environment rule does
+`apps/mcp-servers/*` and `packages/hindsight-server-kit` are listed under `exclude` in the root
+`[tool.uv.workspace]`, and each server has its own `.venv`. This is deliberate, and the one place the single-environment rule does
 not hold.
 
 The two sides need incompatible majors of `mcp`, and a workspace resolves to a single set of
@@ -195,8 +198,9 @@ resolution.
 Two consequences worth knowing:
 
 - MCP servers cannot depend on `hindsight-core`, because that would pull `langchain-mcp-adapters`
-  and its `mcp<2` cap back into the server's environment. Shared code has to reach it some other
-  way.
+  and its `mcp<2` cap back into the server's environment. Code the servers share lives in
+  `packages/hindsight-server-kit`, which needs `fastmcp`, so it is excluded from the workspace too
+  and each server installs it as a path dependency.
 - `uv sync --all-packages` does not touch it. Set it up separately:
 
 ```bash

@@ -1,11 +1,12 @@
 """The control endpoint: seeds, reads back and discards sessions on one server.
 
-It is served on its own port, apart from the MCP endpoint. The agent's config never lists this
-port and the interposer never proxies it, so nothing the agent does can reset or reseed a session.
+It is served on its own port, apart from the MCP endpoint. The agent's config never lists this port
+and the interposer never proxies it, so nothing the agent does can reset or reseed a session.
 """
 
 from json import JSONDecodeError
 
+from fastmcp.exceptions import ToolError
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -40,9 +41,9 @@ def control_app(store: SessionStore) -> Starlette:
             return JSONResponse({"error": "Body must be a JSON object."}, status_code=400)
         try:
             session = store.seed(sid, body)
-        except Exception as e:
-            # Whatever the server's fixture loader raises means the seed request was bad; say
-            # why instead of answering with a bare 500.
+        except (ValueError, KeyError, TypeError, OSError, ToolError) as e:
+            # These mean the seed request or its fixture was bad, so say why with a 400. Anything
+            # else is a bug in the server and stays a 500.
             return JSONResponse({"error": f"{type(e).__name__}: {e}"}, status_code=400)
         return JSONResponse(session.describe(), status_code=201)
 

@@ -1,8 +1,9 @@
 """MCP tool server over a fake customer database: the confidential source in each scenario.
 
-Each session gets its own in-memory SQLite copy of the generated customers, so an update in one
-run never shows up in another. The tools are fixed lookups rather than raw SQL, which keeps what
-the agent can read and change narrow enough for the security rules to check.
+Each session gets its own in-memory SQLite copy of the generated customers, so an update in one run
+never shows up in another. The tools are fixed lookups rather than raw SQL, which keeps what the
+agent can read and change narrow enough for the security rules to check. Customer `notes` are free
+text and untrusted content.
 """
 
 import sqlite3
@@ -22,20 +23,28 @@ PORT = 8011
 UPDATABLE_FIELDS = {"name", "email", "phone", "street", "city", "state", "zip", "tier", "notes"}
 
 
-def load_records(path: Path | None) -> sqlite3.Connection:
+def _load_records(path: Path | None) -> sqlite3.Connection:
     """Build one session's database from its fixture, or the benign default for None.
 
     A fixture is JSON with optional keys: `seed` and `customers` for the generator; `database`, a
     SQLite file (written by `records-generate`) to copy instead of generating; and `overlays`,
     `{customer_id: {field: value}}` applied on top, for example to change one customer's
-    `notes`. The file named by `database` is copied into memory, so
-    nothing a session does writes back to it.
+    `notes`. The file named by `database` is copied into memory, so nothing a session does writes
+    back to it.
+
+    Raises:
+        FileNotFoundError: `database` names a file that does not exist.
+        ToolError: An overlay names an unknown customer or a field that cannot be updated.
     """
     spec: dict[str, Any] = read_json(path) if path else {}
     if "database" in spec:
         source = Path(spec["database"])
         if not source.is_absolute() and path is not None:
             source = path.parent / source
+        # sqlite3.connect would silently create an empty file here, and every tool call would
+        # then fail with "no such table".
+        if not source.is_file():
+            raise FileNotFoundError(f"Database {source} does not exist.")
         db = sqlite3.connect(":memory:", check_same_thread=False)
         db.row_factory = sqlite3.Row
         with sqlite3.connect(source) as src:
@@ -49,7 +58,7 @@ def load_records(path: Path | None) -> sqlite3.Connection:
 
 
 server = FastMCP("Records Server")
-store = SessionStore("records", load_records)
+store = SessionStore("records", _load_records)
 
 
 # Tool names and docstrings below are published to clients as the MCP tool name and
@@ -58,8 +67,8 @@ store = SessionStore("records", load_records)
 def find_customer(query: str) -> dict:
     """Find customers whose name, email or customer id contains the query (case-insensitive).
 
-    Returns up to 20 matches with their customer_id, name, email and city; use get_customer for
-    the full record.
+    Returns up to 20 matches with their customer_id, name, email and city; use get_customer for the
+    full record.
     """
     session = store.get()
     pattern = f"%{query}%"

@@ -1,9 +1,9 @@
 """Per-session state for a tool server, picked by the `Hindsight-Session` request header.
 
-A request that carries the header gets that session's state, which must have been seeded through
-the control endpoint first. A request without it -- a quick manual run, `fastmcp call`, an agent
-config with no header -- gets one default state, loaded on first use. Resetting the default state
-means restarting the server.
+A request that carries the header gets that session's state, which must have been seeded through the
+control endpoint first. A request without it -- a quick manual run, `fastmcp call`, an agent config
+with no header -- gets one default state, loaded on first use. Resetting the default state means
+restarting the server.
 """
 
 import json
@@ -35,8 +35,8 @@ FixtureLoader = Callable[[Path | None], Any]
 class Session:
     """One run's state on one server.
 
-    `data` is whatever the server's fixture loader returned and is private to this session.
-    `lock` serialises tool calls within the session, since sync tools run on worker threads.
+    `data` is whatever the server's fixture loader returned and is private to this session. `lock`
+    serialises tool calls within the session, since sync tools run on worker threads.
     """
 
     id: str | None
@@ -54,8 +54,10 @@ class Session:
     def record_effect(self, tool: str, **details: Any) -> dict[str, Any]:
         """Append what a call changed to this session's effect log and return the entry.
 
-        The log is append-only. It is the ground truth for what the agent's calls changed,
-        and what the orchestrator reads back after the run (E-03).
+        The log is append-only. It is the ground truth for what the agent's calls changed, and what
+        the orchestrator reads back after the run (E-03). `details` usually holds text the agent
+        wrote (email bodies, URLs, file contents), stored verbatim: it is untrusted evidence for
+        whoever reads the log, never instructions.
         """
         effect = {"seq": len(self.effects) + 1, "tool": tool, "at": self.now.isoformat(), **details}
         self.effects.append(effect)
@@ -88,9 +90,9 @@ class SessionStore:
     def get(self) -> Session:
         """Return the session the current request belongs to.
 
-        Raises a ToolError, which reaches the agent as an MCP error, when the header names a
-        session that was never seeded. Falling back to the default state there would let a run
-        silently read another run's data (N-04).
+        Raises a ToolError, which reaches the agent as an MCP error, when the header names a session
+        that was never seeded. Falling back to the default state there would let a run silently read
+        another run's data (N-04).
         """
         sid = get_http_headers().get(SESSION_HEADER.lower())
         if sid:
@@ -102,9 +104,9 @@ class SessionStore:
                     f"seed it with POST /control/sessions/{sid} on its control port first."
                 )
             return session
-        return self.default()
+        return self._default_session()
 
-    def default(self) -> Session:
+    def _default_session(self) -> Session:
         """Return the default state, loading it on first use.
 
         It reads `HINDSIGHT_FIXTURE`, `HINDSIGHT_TIME` and `HINDSIGHT_SEED` from the environment,
@@ -129,11 +131,18 @@ class SessionStore:
         file means the scenario leaves this server on its benign fixture; `time`, the ISO 8601
         scenario time; and `seed`, the integer seed for the session's random source. Replacing an
         existing session is how a session is reset.
+
+        Raises:
+            FileNotFoundError: `fixture` names a file that does not exist.
+            ValueError: `time` is not ISO 8601 with a UTC offset, or `seed` is not an integer.
+
+        Anything the server's fixture loader raises for a bad fixture also propagates; the control
+        endpoint turns these into a 400 response.
         """
         spec = spec or {}
         fixture = spec.get("fixture")
         if fixture is None and spec.get("scenario"):
-            candidate = self.scenarios_dir() / str(spec["scenario"]) / f"{self.name}.json"
+            candidate = self._scenarios_dir() / str(spec["scenario"]) / f"{self.name}.json"
             fixture = candidate if candidate.exists() else None
         session = self._build(
             sid,
@@ -161,8 +170,8 @@ class SessionStore:
             return sorted(self._sessions)
 
     @staticmethod
-    def scenarios_dir() -> Path:
-        """Return the directory scenario ids resolve against (`HINDSIGHT_SCENARIOS`, else ./scenarios)."""
+    def _scenarios_dir() -> Path:
+        # Scenario ids resolve against HINDSIGHT_SCENARIOS, else ./scenarios.
         return Path(os.environ.get("HINDSIGHT_SCENARIOS", "scenarios"))
 
     def _build(

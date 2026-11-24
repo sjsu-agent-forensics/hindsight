@@ -10,9 +10,9 @@ from fastmcp import FastMCP
 async def manifest(server: FastMCP) -> dict[str, Any]:
     """Return every tool's MCP descriptor and the SHA-256 of its canonical JSON form.
 
-    Canonical means keys sorted, no whitespace, None fields dropped, so the hash changes only when
-    a tool's name, description or schema does. Registry labels (sources, sinks, reads, writes) are
-    not here yet; they arrive with each server's `registry.toml`.
+    Canonical means keys sorted, no whitespace, None fields dropped, so the hash changes only when a
+    tool's name, description or schema does. Registry labels (sources, sinks, reads, writes) are not
+    here yet; they arrive with each server's `registry.toml`.
     """
     tools = []
     for tool in await server.list_tools():

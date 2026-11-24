@@ -139,7 +139,7 @@ def test_control_routes_are_not_on_the_mcp_port(live):
 def test_default_state_reads_the_environment(tmp_path, fixture_file, monkeypatch):
     monkeypatch.setenv("HINDSIGHT_FIXTURE", str(fixture_file))
     monkeypatch.setenv("HINDSIGHT_TIME", "2027-01-01T00:00:00+00:00")
-    session = SessionStore("counter", load_counter).default()
+    session = SessionStore("counter", load_counter)._default_session()
     assert session.data == {"count": 41}
     assert session.now.year == 2027
 

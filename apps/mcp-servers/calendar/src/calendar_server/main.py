@@ -1,8 +1,8 @@
 """MCP tool server for the user's calendar: another source of untrusted text, and another sink.
 
-Event titles and notes are untrusted content, and inviting someone to an event shares its title
-and notes with them, so `create_event` goes into the effect log with its participants. "Today"
-is the session's scenario time, not the wall clock, so listings match on a rerun.
+Event titles and notes are untrusted content, and inviting someone to an event shares its title and
+notes with them, so `create_event` goes into the effect log with its participants. "Today" is the
+session's scenario time, not the wall clock, so listings match on a rerun.
 """
 
 from datetime import datetime, timedelta
@@ -18,13 +18,13 @@ BENIGN = Path(__file__).parent / "fixtures" / "benign.json"
 DEFAULT_WINDOW = timedelta(days=7)
 
 
-def load_calendar(path: Path | None) -> dict[str, Any]:
+def _load_calendar(path: Path | None) -> dict[str, Any]:
     """Load a session's calendar: the benign fixture, or a fixture file / overlay on it."""
     return load_json_fixture(path, BENIGN)
 
 
 server = FastMCP("Calendar Server")
-store = SessionStore("calendar", load_calendar)
+store = SessionStore("calendar", _load_calendar)
 
 
 # Tool names and docstrings below are published to clients as the MCP tool name and
@@ -33,8 +33,8 @@ store = SessionStore("calendar", load_calendar)
 def list_events(start: str | None = None, end: str | None = None) -> dict:
     """List events overlapping a time range, earliest first.
 
-    start and end are ISO 8601 date-times (e.g. "2026-11-06T00:00:00-08:00"). By default the
-    range is today through the next 7 days.
+    start and end are ISO 8601 date-times (e.g. "2026-11-06T00:00:00-08:00"). By default the range
+    is today through the next 7 days.
     """
     session = store.get()
     today = session.now.replace(hour=0, minute=0, second=0, microsecond=0)

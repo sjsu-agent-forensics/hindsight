@@ -13,7 +13,7 @@ dependencies = [
 messaging-server = "messaging_server.main:main"
 
 [tool.uv.sources]
-hindsight-server-kit = { path = "../kit", editable = true }
+hindsight-server-kit = { path = "../../../packages/hindsight-server-kit", editable = true }
 
 [dependency-groups]
 dev = [

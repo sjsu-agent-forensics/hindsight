@@ -7,7 +7,7 @@ Internal MCP tool server with one tool, `get_datetime`, which returns the sessio
 The time is fixed, not the wall clock, so a rerun sees the same time as the original run. It
 defaults to `2026-11-06T09:00:00-08:00`; a session sets its own with the `time` key when it is
 seeded through the control endpoint, and the default state reads `HINDSIGHT_TIME`. Built on
-`hindsight-server-kit` (see `apps/mcp-servers/kit/README.md`).
+`hindsight-server-kit` (see `packages/hindsight-server-kit/README.md`).
 
 ```bash
 uv sync --project apps/mcp-servers/clock                  # once

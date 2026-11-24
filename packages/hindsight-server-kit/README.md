@@ -36,7 +36,7 @@ from fastmcp import FastMCP
 from hindsight_server_kit import SessionStore, serve
 
 server = FastMCP("Records Server")
-store = SessionStore("records", load_fixture=load_records)  # module level, so `fastmcp call` finds it
+store = SessionStore("records", load_fixture=_load_records)  # module level, so `fastmcp call` finds it
 
 
 @server.tool()
@@ -49,7 +49,7 @@ def main() -> None:
     serve(server, store, port=8011)  # MCP on 8011, control on 8111
 ```
 
-`load_fixture(path)` gets the session's fixture file, or `None` for the benign default, and returns
+The loader (`load_fixture(path)` here, private to the server's module) gets the session's fixture file, or `None` for the benign default, and returns
 whatever the tools read from `session.data`. Servers whose data is JSON can use
 `load_json_fixture(path, benign)`, which also understands overlays: a fixture with
 `"base": "benign"` starts from the benign fixture, appends the items under `add`, and replaces
@@ -71,11 +71,12 @@ Each server lists the kit as a path dependency in its own `pyproject.toml`:
 dependencies = ["fastmcp>=4.0.8", "hindsight-server-kit"]
 
 [tool.uv.sources]
-hindsight-server-kit = { path = "../kit", editable = true }
+hindsight-server-kit = { path = "../../../packages/hindsight-server-kit", editable = true }
 ```
 
-The kit depends only on `fastmcp`. It must never depend on `hindsight-core`, or the `mcp<2` cap
-comes back (see "The MCP server exception" in the root `README.md`).
+The kit depends on `fastmcp` and the web libraries it imports directly (`starlette`, `uvicorn`,
+`httpx2`). It must never depend on `hindsight-core`, or the `mcp<2` cap comes back (see "The MCP
+server exception" in the root `README.md`).
 
 ## Tests
 
@@ -83,5 +84,5 @@ comes back (see "The MCP server exception" in the root `README.md`).
 test and gives back a client that can send the session header; the in-memory fastmcp client cannot.
 
 ```bash
-uv run --project apps/mcp-servers/kit pytest apps/mcp-servers/kit
+uv run --project packages/hindsight-server-kit pytest packages/hindsight-server-kit
 ```

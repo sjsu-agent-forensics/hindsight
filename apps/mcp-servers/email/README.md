@@ -15,7 +15,7 @@ folder and the effect log.
 
 The benign mailbox is `src/email_server/fixtures/benign.json`. Its people match `records`
 (Samuel Eriksen is `c_001`, and so on). A fixture can replace it or overlay it with
-`"base": "benign"` plus `add` / `patch` (see `apps/mcp-servers/kit/README.md`).
+`"base": "benign"` plus `add` / `patch` (see `packages/hindsight-server-kit/README.md`).
 
 ```bash
 uv sync --project apps/mcp-servers/email                  # once

@@ -50,7 +50,11 @@ def test_send_is_stored_logged_and_isolated(live):
     live.seed("s-other")
     sent = live.call(
         "send_email",
-        {"to": ["dana@ergosupplies.example"], "subject": "Order update", "body": "Can you confirm the EC-200 delivery date?"},
+        {
+            "to": ["dana@ergosupplies.example"],
+            "subject": "Order update",
+            "body": "Can you confirm the EC-200 delivery date?",
+        },
         "s-send",
     )
     assert sent == {

@@ -442,13 +442,21 @@ wheels = [
 [[package]]
 name = "hindsight-server-kit"
 version = "0.1.0"
-source = { editable = "../kit" }
+source = { editable = "../../../packages/hindsight-server-kit" }
 dependencies = [
     { name = "fastmcp" },
+    { name = "httpx2" },
+    { name = "starlette" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fastmcp", specifier = ">=4.0.8" }]
+requires-dist = [
+    { name = "fastmcp", specifier = ">=4.0.8" },
+    { name = "httpx2", specifier = ">=2.15.1" },
+    { name = "starlette", specifier = ">=1.9.0" },
+    { name = "uvicorn", specifier = ">=0.54.0" },
+]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8" }]
@@ -1370,7 +1378,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=4.0.8" },
-    { name = "hindsight-server-kit", editable = "../kit" },
+    { name = "hindsight-server-kit", editable = "../../../packages/hindsight-server-kit" },
 ]
 
 [package.metadata.requires-dev]

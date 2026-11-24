@@ -15,13 +15,13 @@ PORT = 8016
 BENIGN = Path(__file__).parent / "fixtures" / "benign.json"
 
 
-def load_workspace(path: Path | None) -> dict[str, Any]:
+def _load_workspace(path: Path | None) -> dict[str, Any]:
     """Load a session's chat workspace: the benign fixture, or a fixture file / overlay on it."""
     return load_json_fixture(path, BENIGN)
 
 
 server = FastMCP("Messaging Server")
-store = SessionStore("messaging", load_workspace)
+store = SessionStore("messaging", _load_workspace)
 
 
 # Tool names and docstrings below are published to clients as the MCP tool name and

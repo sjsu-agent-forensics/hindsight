@@ -14,9 +14,9 @@ sees the same people; all of it is synthetic (`example.*` emails, `555-01xx` pho
 `notes` is where untrusted content comes from, and `update_customer.fields` is the sensitive
 argument. The tools are fixed lookups, not raw SQL.
 
-Built on `hindsight-server-kit` (see `apps/mcp-servers/kit/README.md`): each session gets its own
-in-memory copy of the database, picked by the `Hindsight-Session` header, and a request with no
-header uses one default copy.
+Built on `hindsight-server-kit` (see `packages/hindsight-server-kit/README.md`): each session gets
+its own in-memory copy of the database, picked by the `Hindsight-Session` header, and a request
+with no header uses one default copy.
 
 ## Running it
 

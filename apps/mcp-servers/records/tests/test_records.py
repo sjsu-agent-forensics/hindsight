@@ -10,7 +10,7 @@ from fastmcp.exceptions import ToolError
 from hindsight_server_kit.testing import running
 
 from records_server.generate import generate
-from records_server.main import load_records, server, store
+from records_server.main import _load_records, server, store
 
 
 def call(client: Client, tool: str, args: dict | None = None) -> dict:
@@ -127,10 +127,17 @@ def test_fixture_can_point_at_a_database_file(tmp_path):
         generate(1, 3).backup(out)
     out.close()
     (tmp_path / "records.json").write_text('{"database": "small.db"}', encoding="utf-8")
-    db = load_records(tmp_path / "records.json")
+    db = _load_records(tmp_path / "records.json")
     assert db.execute("SELECT count(*) FROM customers").fetchone()[0] == 3
     # Writes go to the in-memory copy, never back to the file.
     db.execute("DELETE FROM customers")
     with sqlite3.connect(tmp_path / "small.db") as check:
         assert check.execute("SELECT count(*) FROM customers").fetchone()[0] == 3
     check.close()
+
+
+def test_missing_database_file_is_an_error(tmp_path):
+    (tmp_path / "records.json").write_text('{"database": "missing.db"}', encoding="utf-8")
+    with pytest.raises(FileNotFoundError):
+        _load_records(tmp_path / "records.json")
+    assert not (tmp_path / "missing.db").exists()
