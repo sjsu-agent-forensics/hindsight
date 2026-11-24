@@ -4,9 +4,10 @@ Post-execution forensics framework for compromised LLM-based agent systems.
 
 The demos under `demos/` are the baseline the framework builds on: a LangGraph ReAct agent
 (`react-agent`) and an agent that reaches its tools over MCP (`mcp-enabled-agent`). The MCP tool
-servers it calls (`math-server`, `weather-server`) live under `apps/mcp-servers/`. These were moved
-here from the earlier `agency` prototype repo. The demos use a local Ollama model (`llama3.2:3b` at
-`http://localhost:11434` by default; see `hindsight.llm.get_llm`).
+servers live under `apps/mcp-servers/`: the five internal workspace servers the MCP demo calls, plus
+`math-server` and `weather-server`, moved here from the earlier `agency` prototype repo. The demos
+use a local Ollama model (`qwen3:4b` at `http://localhost:11434` by default; see
+`hindsight.llm.get_llm`).
 
 ## Layout
 
@@ -67,8 +68,7 @@ uv run --package react-agent react-agent
 uv run --package mcp-enabled-agent mcp-enabled-agent
 ```
 
-`mcp-enabled-agent` also needs its tool servers set up, and the HTTP servers running (see
-below).
+`mcp-enabled-agent` also needs the internal workspace servers running (see below).
 
 ## Running the tool servers
 
@@ -112,8 +112,8 @@ server's `fixtures/benign.json` and the kit's shared people directory. Edit the 
 JSON, then rerun it; `python scripts/generate_workspace.py --check` (also covered by the kit's
 tests) fails when a fixture is out of date.
 
-`math-server` speaks stdio, so `mcp-enabled-agent` spawns it as a subprocess and you never start it
-yourself. It launches the console script out of that server's own `.venv`, which is what keeps the
+`math-server` speaks stdio, so a client spawns it as a subprocess and you never start it yourself.
+A client must launch the console script out of that server's own `.venv`, which is what keeps the
 two incompatible `mcp` versions apart, so the `uv sync` above is what makes it work.
 
 To start every HTTP server at once, in one terminal, run the launcher from the repo root. It waits
@@ -127,17 +127,10 @@ python scripts/launch_servers.py email drive     # only these
 It needs only the standard library, and `uv run` inside it syncs each server's `.venv` on first
 start. Add each new internal server to `SERVERS` in the script. To start one server by hand instead:
 
-`weather-server` listens on a port and runs until you stop it, so start it in its own terminal
-before the demo:
+`weather-server` listens on a port and runs until you stop it, so start it in its own terminal:
 
 ```bash
 uv run --project apps/mcp-servers/weather weather-server   # Ctrl-C to quit
-```
-
-Then run the agent from a second terminal:
-
-```bash
-uv run --package mcp-enabled-agent mcp-enabled-agent
 ```
 
 Only one process can hold port 8001; if the server fails with `error while attempting to bind`,
