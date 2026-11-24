@@ -6,8 +6,8 @@ server` is not started: it speaks stdio and is spawned by the demo that uses it.
 
 Usage, from the repo root:
 
-python scripts/launch_servers.py                # every server below python
-scripts/launch_servers.py records clock  # only these
+- `python scripts/launch_servers.py` starts every server in `SERVERS` below.
+- `python scripts/launch_servers.py email drive` starts only those.
 
 Standard library only, so any Python 3.12+ runs it; it does not need the workspace environment. This
 is a stand-in for the orchestrator, which will take over starting the servers.
@@ -44,15 +44,13 @@ class Server:
         return [self.port] + ([self.control_port] if self.control_port else [])
 
 
-# Every HTTP server, with its port from the internal tools plan. Add new servers here.
+# Every HTTP server, with its port from the design spec. Add new servers here.
 SERVERS = [
     Server("weather", 8001),
-    Server("records", 8011, 8111),
     Server("email", 8012, 8112),
     Server("web", 8013, 8113),
-    Server("files", 8014, 8114),
-    Server("clock", 8015, 8115),
-    Server("messaging", 8016, 8116),
+    Server("drive", 8014, 8114),
+    Server("chat", 8016, 8116),
     Server("calendar", 8017, 8117),
 ]
 

@@ -1,9 +1,10 @@
 """Agent demo that reaches its tools over MCP.
 
-Connects to the math server over stdio and the weather server over HTTP, asks one
-question covering both, and prints the answer followed by every tool call and response
-in the run. The math server is spawned automatically; the weather server listens on a
-port and must already be running -- see demos/mcp-enabled-agent/README.md.
+Connects to the math server over stdio, and to the weather server and the internal workspace servers
+(email, web, drive, chat, calendar) over HTTP, asks one question that uses several of them, and
+prints the answer followed by every tool call and response in the run. The math server is spawned
+automatically; the HTTP servers must already be running (python scripts/launch_servers.py) -- see
+demos/mcp-enabled-agent/README.md.
 """
 
 import asyncio
@@ -29,6 +30,9 @@ _MATH_SERVER = (
     Path(__file__).resolve().parents[4] / "apps/mcp-servers/math/.venv" / _VENV_BIN / "math-server"
 )
 
+# The internal workspace servers and their MCP ports; scripts/launch_servers.py starts them.
+_WORKSPACE_SERVERS = {"email": 8012, "web": 8013, "drive": 8014, "chat": 8016, "calendar": 8017}
+
 client = MultiServerMCPClient(
     {
         "math": {
@@ -43,15 +47,21 @@ client = MultiServerMCPClient(
             "url": "http://127.0.0.1:8001/api/mcp",
             "transport": "http",
         },
-        "records": {
-            "url": "http://127.0.0.1:8011/api/mcp",
-            "transport": "http",
-        },
-        "clock": {
-            "url": "http://127.0.0.1:8015/api/mcp", 
-            "transport": "http",
+        # The workspace servers (see apps/mcp-servers/). No Hindsight-Session header is sent
+        # yet, so every call uses each server's default state.
+        **{
+            name: {"url": f"http://127.0.0.1:{port}/api/mcp", "transport": "http"}
+            for name, port in _WORKSPACE_SERVERS.items()
         },
     }
+)
+
+
+# One question per kind of server: math over stdio, weather over HTTP, and a task that spans the
+# drive and email workspace servers (the M1 acceptance task in the internal tools design spec).
+_QUESTION = (
+    "What's (3 + 5) x 12? What's the weather in San Jose? Then find the notes from Monday's "
+    "pipeline meeting in the drive and email Jamie Park a two-line summary."
 )
 
 
@@ -63,9 +73,7 @@ async def _run() -> None:
     logger.info("Starting the agent run.")
     tools = await client.get_tools()
     agent = create_agent(get_llm(), tools)
-    math_response = await agent.ainvoke(
-        {"messages": "What's (3 + 5) x 12? What's the weather in San Jose? What is the current time? What is customer c_001's email?"}
-    )
+    math_response = await agent.ainvoke({"messages": _QUESTION})
     print(math_response["messages"][-1].content)
 
     for message in math_response["messages"]:

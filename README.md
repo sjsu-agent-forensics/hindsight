@@ -67,7 +67,7 @@ uv run --package react-agent react-agent
 uv run --package mcp-enabled-agent mcp-enabled-agent
 ```
 
-`mcp-enabled-agent` also needs its tool servers set up, and `weather-server` running (see
+`mcp-enabled-agent` also needs its tool servers set up, and the HTTP servers running (see
 below).
 
 ## Running the tool servers
@@ -78,12 +78,10 @@ and each needs its own one-time setup:
 ```bash
 uv sync --project apps/mcp-servers/math
 uv sync --project apps/mcp-servers/weather
-uv sync --project apps/mcp-servers/records
 uv sync --project apps/mcp-servers/email
 uv sync --project apps/mcp-servers/web
-uv sync --project apps/mcp-servers/files
-uv sync --project apps/mcp-servers/clock
-uv sync --project apps/mcp-servers/messaging
+uv sync --project apps/mcp-servers/drive
+uv sync --project apps/mcp-servers/chat
 uv sync --project apps/mcp-servers/calendar
 ```
 
@@ -93,22 +91,26 @@ The two use different transports, which is what decides whether you start them b
 | ------------------ | --------- | ------------------------------- | --------------- |
 | `math-server`      | stdio     | none -- stdin/stdout            | the demo        |
 | `weather-server`   | http      | `http://127.0.0.1:8001/api/mcp` | you, beforehand |
-| `records-server`   | http      | `http://127.0.0.1:8011/api/mcp` | you, beforehand |
 | `email-server`     | http      | `http://127.0.0.1:8012/api/mcp` | you, beforehand |
 | `web-server`       | http      | `http://127.0.0.1:8013/api/mcp` | you, beforehand |
-| `files-server`     | http      | `http://127.0.0.1:8014/api/mcp` | you, beforehand |
-| `clock-server`     | http      | `http://127.0.0.1:8015/api/mcp` | you, beforehand |
-| `messaging-server` | http      | `http://127.0.0.1:8016/api/mcp` | you, beforehand |
+| `drive-server`     | http      | `http://127.0.0.1:8014/api/mcp` | you, beforehand |
+| `chat-server`      | http      | `http://127.0.0.1:8016/api/mcp` | you, beforehand |
 | `calendar-server`  | http      | `http://127.0.0.1:8017/api/mcp` | you, beforehand |
 
-The internal servers (`records`, `email`, `web`, `files`, `clock`, `messaging`, `calendar`) are
-built on the shared `hindsight-server-kit` (`packages/hindsight-server-kit/`, a library, not a
-server).
+The internal servers (`email`, `web`, `drive`, `chat`, `calendar`) give the agent a synthetic
+workspace: it acts as the assistant of Alex Morgan at the fictional company Northwind. Their 35
+tools follow the names and arguments of AgentDojo's Workspace and Slack suites. They are built on
+the shared `hindsight-server-kit` (`packages/hindsight-server-kit/`, a library, not a server).
 Each keeps its data per session, picked by a `Hindsight-Session` request header, and also serves a
-control endpoint on its MCP port plus 100 (8111 to 8117) for seeding, reading back and discarding
+control endpoint on its MCP port plus 100 (8112 to 8117) for seeding, reading back and discarding
 sessions. A request with no header uses one default state, so the `fastmcp` commands below work on
 them unchanged. See `packages/hindsight-server-kit/README.md`. Run each server's tests with
 `uv run --project apps/mcp-servers/<name> pytest apps/mcp-servers/<name>`.
+
+All of their data is generated from seed 295 by `scripts/generate_workspace.py`, which writes each
+server's `fixtures/benign.json` and the kit's shared people directory. Edit the generator, not the
+JSON, then rerun it; `python scripts/generate_workspace.py --check` (also covered by the kit's
+tests) fails when a fixture is out of date.
 
 `math-server` speaks stdio, so `mcp-enabled-agent` spawns it as a subprocess and you never start it
 yourself. It launches the console script out of that server's own `.venv`, which is what keeps the
@@ -119,7 +121,7 @@ until each server is listening, prints their addresses, and stops them all on Ct
 
 ```bash
 python scripts/launch_servers.py                 # every HTTP server
-python scripts/launch_servers.py records clock   # only these
+python scripts/launch_servers.py email drive     # only these
 ```
 
 It needs only the standard library, and `uv run` inside it syncs each server's `.venv` on first

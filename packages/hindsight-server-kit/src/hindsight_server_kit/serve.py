@@ -17,7 +17,7 @@ from hindsight_server_kit.session import SessionStore
 
 MCP_PATH = "/api/mcp"
 
-# The control endpoint listens on the MCP port plus this, e.g. records on 8011 and 8111.
+# The control endpoint listens on the MCP port plus this, e.g. email on 8012 and 8112.
 CONTROL_PORT_OFFSET = 100
 
 

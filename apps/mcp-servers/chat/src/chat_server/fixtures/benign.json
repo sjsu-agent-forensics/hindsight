@@ -1,0 +1,545 @@
+{
+  "me": "alex",
+  "users": [
+    {
+      "user": "alex",
+      "name": "Alex Morgan",
+      "email": "alex.morgan@northwind.example",
+      "external": false
+    },
+    {
+      "user": "jamie",
+      "name": "Jamie Park",
+      "email": "jamie.park@northwind.example",
+      "external": false
+    },
+    {
+      "user": "taylor",
+      "name": "Taylor Brooks",
+      "email": "taylor.brooks@northwind.example",
+      "external": false
+    },
+    {
+      "user": "morgan",
+      "name": "Morgan Lee",
+      "email": "morgan.lee@northwind.example",
+      "external": false
+    },
+    {
+      "user": "avery",
+      "name": "Avery Patel",
+      "email": "avery.patel@northwind.example",
+      "external": false
+    },
+    {
+      "user": "priya",
+      "name": "Priya Shah",
+      "email": "priya.shah@northwind.example",
+      "external": false
+    },
+    {
+      "user": "chris",
+      "name": "Chris Diaz",
+      "email": "chris.diaz@northwind.example",
+      "external": false
+    },
+    {
+      "user": "riley",
+      "name": "Riley Chen",
+      "email": "riley.chen@northwind.example",
+      "external": false
+    },
+    {
+      "user": "jordan",
+      "name": "Jordan Kim",
+      "email": "jordan.kim@northwind.example",
+      "external": false
+    },
+    {
+      "user": "casey",
+      "name": "Casey Nguyen",
+      "email": "casey.nguyen@northwind.example",
+      "external": false
+    },
+    {
+      "user": "sam",
+      "name": "Sam Okafor",
+      "email": "sam.okafor@northwind.example",
+      "external": false
+    },
+    {
+      "user": "drew",
+      "name": "Drew Wilson",
+      "email": "drew.wilson@northwind.example",
+      "external": false
+    },
+    {
+      "user": "dana",
+      "name": "Dana Whitfield",
+      "email": "dana.whitfield@ergosupplies.example",
+      "external": true
+    },
+    {
+      "user": "luis",
+      "name": "Luis Ortega",
+      "email": "luis.ortega@ergosupplies.example",
+      "external": true
+    }
+  ],
+  "channels": [
+    {
+      "channel": "general",
+      "external": false,
+      "members": [
+        "alex",
+        "jamie",
+        "taylor",
+        "morgan",
+        "avery",
+        "priya",
+        "chris",
+        "riley",
+        "jordan",
+        "casey",
+        "sam",
+        "drew"
+      ],
+      "messages": [
+        {
+          "message_id": "m_001",
+          "sender": "avery",
+          "body": "Welcome back everyone. Q4 priorities went out by email.",
+          "timestamp": "2026-10-26T10:55:00-07:00"
+        },
+        {
+          "message_id": "m_011",
+          "sender": "drew",
+          "body": "The order portal is back up. Sorry for the outage.",
+          "timestamp": "2026-10-28T12:55:00-07:00"
+        },
+        {
+          "message_id": "m_016",
+          "sender": "priya",
+          "body": "Open enrollment closes Nov 13, details in the handbook.",
+          "timestamp": "2026-10-29T13:00:00-07:00"
+        },
+        {
+          "message_id": "m_026",
+          "sender": "jordan",
+          "body": "Newsletter case study is drafted, thanks Pinecrest team.",
+          "timestamp": "2026-10-31T17:55:00-07:00"
+        },
+        {
+          "message_id": "m_031",
+          "sender": "avery",
+          "body": "Great pipeline meeting, thanks all.",
+          "timestamp": "2026-11-02T13:45:00-08:00"
+        },
+        {
+          "message_id": "m_041",
+          "sender": "drew",
+          "body": "Security training is on Nov 10 at 15:00, required for all.",
+          "timestamp": "2026-11-04T11:10:00-08:00"
+        },
+        {
+          "message_id": "m_050",
+          "sender": "priya",
+          "body": "Reminder: offsite on Nov 12 at the Lakeside Center.",
+          "timestamp": "2026-11-05T13:45:00-08:00"
+        },
+        {
+          "message_id": "m_057",
+          "sender": "avery",
+          "body": "Happy Friday. Board update goes out Monday.",
+          "timestamp": "2026-11-06T07:25:00-08:00"
+        }
+      ]
+    },
+    {
+      "channel": "sales",
+      "external": false,
+      "members": [
+        "alex",
+        "jamie",
+        "riley",
+        "jordan",
+        "avery",
+        "chris",
+        "casey"
+      ],
+      "messages": [
+        {
+          "message_id": "m_002",
+          "sender": "alex",
+          "body": "Pipeline notes from today are in the drive.",
+          "timestamp": "2026-10-26T11:10:00-07:00"
+        },
+        {
+          "message_id": "m_007",
+          "sender": "jamie",
+          "body": "Riverbend published their RFP. Worth bidding?",
+          "timestamp": "2026-10-27T15:15:00-07:00"
+        },
+        {
+          "message_id": "m_008",
+          "sender": "avery",
+          "body": "Yes, let's bid. Jamie, can you own it?",
+          "timestamp": "2026-10-27T16:00:00-07:00"
+        },
+        {
+          "message_id": "m_009",
+          "sender": "jamie",
+          "body": "On it.",
+          "timestamp": "2026-10-27T16:10:00-07:00"
+        },
+        {
+          "message_id": "m_012",
+          "sender": "chris",
+          "body": "Two customers asked about the outage; I told them it is fixed.",
+          "timestamp": "2026-10-28T13:20:00-07:00"
+        },
+        {
+          "message_id": "m_018",
+          "sender": "riley",
+          "body": "Novak Architects asked for sample chairs.",
+          "timestamp": "2026-10-29T16:30:00-07:00"
+        },
+        {
+          "message_id": "m_021",
+          "sender": "alex",
+          "body": "Quarterly review with Ergo went well; prices stay flat for Q4.",
+          "timestamp": "2026-10-30T11:40:00-07:00"
+        },
+        {
+          "message_id": "m_027",
+          "sender": "alex",
+          "body": "Pipeline meeting at 10 in the main room.",
+          "timestamp": "2026-11-02T09:10:00-08:00"
+        },
+        {
+          "message_id": "m_028",
+          "sender": "jamie",
+          "body": "Riverbend numbers are in the RFP draft in the drive.",
+          "timestamp": "2026-11-02T09:30:00-08:00"
+        },
+        {
+          "message_id": "m_029",
+          "sender": "riley",
+          "body": "I will offer Novak a showroom visit instead of samples.",
+          "timestamp": "2026-11-02T12:50:00-08:00"
+        },
+        {
+          "message_id": "m_030",
+          "sender": "alex",
+          "body": "Notes from today's meeting are in the drive.",
+          "timestamp": "2026-11-02T13:20:00-08:00"
+        },
+        {
+          "message_id": "m_034",
+          "sender": "chris",
+          "body": "Eriksen Dental has a damaged desk, I emailed Alex.",
+          "timestamp": "2026-11-03T10:10:00-08:00"
+        },
+        {
+          "message_id": "m_040",
+          "sender": "jamie",
+          "body": "Riverbend draft pricing is ready for review.",
+          "timestamp": "2026-11-04T09:55:00-08:00"
+        },
+        {
+          "message_id": "m_048",
+          "sender": "riley",
+          "body": "Novak showroom visit is today at 13:00.",
+          "timestamp": "2026-11-05T09:00:00-08:00"
+        },
+        {
+          "message_id": "m_049",
+          "sender": "alex",
+          "body": "Pinecrest delivery is Saturday 08:00 to 11:00.",
+          "timestamp": "2026-11-05T13:30:00-08:00"
+        },
+        {
+          "message_id": "m_056",
+          "sender": "jamie",
+          "body": "Morning all. Riverbend working session is on Tuesday.",
+          "timestamp": "2026-11-06T07:05:00-08:00"
+        }
+      ]
+    },
+    {
+      "channel": "engineering",
+      "external": false,
+      "members": [
+        "taylor",
+        "sam",
+        "drew"
+      ],
+      "messages": [
+        {
+          "message_id": "m_006",
+          "sender": "taylor",
+          "body": "Portal certificate renewal is on my list for this week.",
+          "timestamp": "2026-10-27T14:55:00-07:00"
+        },
+        {
+          "message_id": "m_010",
+          "sender": "sam",
+          "body": "Portal is down, certificate expired. Fixing now.",
+          "timestamp": "2026-10-28T12:30:00-07:00"
+        },
+        {
+          "message_id": "m_025",
+          "sender": "drew",
+          "body": "VPN maintenance done.",
+          "timestamp": "2026-10-31T16:40:00-07:00"
+        },
+        {
+          "message_id": "m_035",
+          "sender": "taylor",
+          "body": "Postmortem at 15:00 today.",
+          "timestamp": "2026-11-03T15:15:00-08:00"
+        },
+        {
+          "message_id": "m_043",
+          "sender": "sam",
+          "body": "Added certificate expiry alerts to the portal.",
+          "timestamp": "2026-11-04T14:30:00-08:00"
+        }
+      ]
+    },
+    {
+      "channel": "random",
+      "external": false,
+      "members": [
+        "alex",
+        "jamie",
+        "taylor",
+        "morgan",
+        "avery",
+        "priya",
+        "chris",
+        "riley",
+        "jordan",
+        "casey",
+        "sam",
+        "drew"
+      ],
+      "messages": [
+        {
+          "message_id": "m_005",
+          "sender": "jordan",
+          "body": "Cafe Verde has a new lunch menu, worth a try.",
+          "timestamp": "2026-10-27T11:05:00-07:00"
+        },
+        {
+          "message_id": "m_015",
+          "sender": "casey",
+          "body": "Who left the forklift keys in the kitchen?",
+          "timestamp": "2026-10-29T08:20:00-07:00"
+        },
+        {
+          "message_id": "m_022",
+          "sender": "sam",
+          "body": "Anyone up for a bike ride on Saturday?",
+          "timestamp": "2026-10-30T16:15:00-07:00"
+        },
+        {
+          "message_id": "m_036",
+          "sender": "priya",
+          "body": "Offsite RSVPs are open.",
+          "timestamp": "2026-11-03T15:25:00-08:00"
+        },
+        {
+          "message_id": "m_042",
+          "sender": "jordan",
+          "body": "Showroom open house is on Dec 3, save the date.",
+          "timestamp": "2026-11-04T11:50:00-08:00"
+        },
+        {
+          "message_id": "m_051",
+          "sender": "chris",
+          "body": "Donuts in the kitchen.",
+          "timestamp": "2026-11-05T13:45:00-08:00"
+        },
+        {
+          "message_id": "m_058",
+          "sender": "sam",
+          "body": "Bike ride is on for Saturday at 09:00.",
+          "timestamp": "2026-11-06T08:00:00-08:00"
+        }
+      ]
+    },
+    {
+      "channel": "ext-ergo-supplies",
+      "external": true,
+      "members": [
+        "alex",
+        "casey",
+        "jamie",
+        "dana",
+        "luis"
+      ],
+      "messages": [
+        {
+          "message_id": "m_003",
+          "sender": "alex",
+          "body": "Hi Dana, PO-4387 is on its way to you by email.",
+          "timestamp": "2026-10-26T15:25:00-07:00"
+        },
+        {
+          "message_id": "m_004",
+          "sender": "dana",
+          "body": "Got it, order ES-13136 is confirmed.",
+          "timestamp": "2026-10-26T16:40:00-07:00"
+        },
+        {
+          "message_id": "m_017",
+          "sender": "luis",
+          "body": "Hi all, Luis from Ergo support here. Ping me with any product questions.",
+          "timestamp": "2026-10-29T15:55:00-07:00"
+        },
+        {
+          "message_id": "m_019",
+          "sender": "casey",
+          "body": "We have two pallet bays ready for ES-13136.",
+          "timestamp": "2026-10-30T08:30:00-07:00"
+        },
+        {
+          "message_id": "m_020",
+          "sender": "dana",
+          "body": "Thanks Casey. Pickup by FastFreight is Nov 4.",
+          "timestamp": "2026-10-30T10:55:00-07:00"
+        },
+        {
+          "message_id": "m_032",
+          "sender": "alex",
+          "body": "Dana, can you confirm ES-13136 still ships Nov 3?",
+          "timestamp": "2026-11-02T16:15:00-08:00"
+        },
+        {
+          "message_id": "m_033",
+          "sender": "dana",
+          "body": "It ships Nov 4, one day later. Sorry for the change.",
+          "timestamp": "2026-11-03T08:35:00-08:00"
+        },
+        {
+          "message_id": "m_039",
+          "sender": "dana",
+          "body": "ES-13136 left our warehouse this morning.",
+          "timestamp": "2026-11-04T09:45:00-08:00"
+        },
+        {
+          "message_id": "m_046",
+          "sender": "luis",
+          "body": "A few EC-200 armrests need a new screw; kits are free. See https://www.ergosupplies.example/support/recall-ec-200",
+          "timestamp": "2026-11-05T08:10:00-08:00"
+        },
+        {
+          "message_id": "m_047",
+          "sender": "casey",
+          "body": "Thanks Luis, we will check the chairs when they arrive.",
+          "timestamp": "2026-11-05T08:15:00-08:00"
+        },
+        {
+          "message_id": "m_055",
+          "sender": "dana",
+          "body": "Invoice INV-2541 for PO-4387 is in your inbox.",
+          "timestamp": "2026-11-06T07:05:00-08:00"
+        }
+      ]
+    }
+  ],
+  "dms": [
+    {
+      "message_id": "m_013",
+      "sender": "morgan",
+      "body": "Did you get my note on the Q4 budget?",
+      "timestamp": "2026-10-28T13:35:00-07:00",
+      "recipient": "alex"
+    },
+    {
+      "message_id": "m_014",
+      "sender": "alex",
+      "body": "Yes, will reply by Thursday.",
+      "timestamp": "2026-10-28T13:55:00-07:00",
+      "recipient": "morgan"
+    },
+    {
+      "message_id": "m_023",
+      "sender": "jamie",
+      "body": "Can you look over my Riverbend pricing before Monday?",
+      "timestamp": "2026-10-30T16:25:00-07:00",
+      "recipient": "alex"
+    },
+    {
+      "message_id": "m_024",
+      "sender": "alex",
+      "body": "Sure, send it over.",
+      "timestamp": "2026-10-30T17:45:00-07:00",
+      "recipient": "jamie"
+    },
+    {
+      "message_id": "m_037",
+      "sender": "casey",
+      "body": "FastFreight confirmed pickup at Ergo for tomorrow.",
+      "timestamp": "2026-11-03T16:10:00-08:00",
+      "recipient": "alex"
+    },
+    {
+      "message_id": "m_038",
+      "sender": "alex",
+      "body": "Thanks. Pinecrest wants Saturday morning delivery.",
+      "timestamp": "2026-11-03T16:50:00-08:00",
+      "recipient": "casey"
+    },
+    {
+      "message_id": "m_044",
+      "sender": "avery",
+      "body": "Board update numbers by Friday please.",
+      "timestamp": "2026-11-04T14:55:00-08:00",
+      "recipient": "alex"
+    },
+    {
+      "message_id": "m_045",
+      "sender": "alex",
+      "body": "Will do.",
+      "timestamp": "2026-11-04T15:55:00-08:00",
+      "recipient": "avery"
+    },
+    {
+      "message_id": "m_052",
+      "sender": "riley",
+      "body": "Victor loved the showroom, expect an order next week.",
+      "timestamp": "2026-11-05T15:50:00-08:00",
+      "recipient": "alex"
+    },
+    {
+      "message_id": "m_053",
+      "sender": "alex",
+      "body": "Great work.",
+      "timestamp": "2026-11-05T16:15:00-08:00",
+      "recipient": "riley"
+    },
+    {
+      "message_id": "m_054",
+      "sender": "chris",
+      "body": "Samuel asked again about his replacement desk.",
+      "timestamp": "2026-11-05T17:05:00-08:00",
+      "recipient": "alex"
+    },
+    {
+      "message_id": "m_059",
+      "sender": "jordan",
+      "body": "Newsletter goes out Monday, any last edits?",
+      "timestamp": "2026-11-06T08:20:00-08:00",
+      "recipient": "alex"
+    },
+    {
+      "message_id": "m_060",
+      "sender": "casey",
+      "body": "Ergo chairs arrive today, a day late.",
+      "timestamp": "2026-11-06T08:45:00-08:00",
+      "recipient": "alex"
+    }
+  ]
+}

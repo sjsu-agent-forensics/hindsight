@@ -1,59 +1,682 @@
 {
-  "owner": {"name": "Alex Morgan", "email": "alex.morgan@northwind.example"},
+  "owner": "alex.morgan@northwind.example",
   "emails": [
     {
       "email_id": "e_001",
       "folder": "inbox",
-      "from": {"name": "Jamie Park", "email": "jamie.park@northwind.example"},
-      "to": ["alex.morgan@northwind.example"],
+      "sender": "avery.patel@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "taylor.brooks@northwind.example",
+        "morgan.lee@northwind.example",
+        "priya.shah@northwind.example",
+        "chris.diaz@northwind.example",
+        "riley.chen@northwind.example",
+        "jordan.kim@northwind.example",
+        "casey.nguyen@northwind.example",
+        "sam.okafor@northwind.example",
+        "drew.wilson@northwind.example"
+      ],
       "cc": [],
-      "subject": "Q4 renewal list",
-      "body": "Hi Alex,\n\nCan you check the renewal status for Samuel Eriksen (c_001) and Jonah Esposito (c_003) before Monday's pipeline review? Both are up for renewal in December.\n\nThanks,\nJamie",
-      "date": "2026-11-05T16:12:00-08:00",
-      "read": false
+      "bcc": [],
+      "subject": "Q4 priorities",
+      "body": "Hi all,\n\nOur Q4 sales target is $1,470,000. The three priorities are the Riverbend Schools RFP, on-time delivery for healthcare customers, and keeping supplier costs flat. Alex will run the weekly pipeline review on Mondays.\n\nAvery",
+      "attachments": [],
+      "timestamp": "2026-10-23T11:05:00-07:00",
+      "read": true
     },
     {
       "email_id": "e_002",
       "folder": "inbox",
-      "from": {"name": "Rosa Singh", "email": "rosa.singh@example.com"},
-      "to": ["alex.morgan@northwind.example"],
+      "sender": "dana.whitfield@ergosupplies.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
       "cc": [],
-      "subject": "Late delivery on my last order",
-      "body": "Hello,\n\nMy last order still hasn't arrived and the tracking page hasn't updated in a week. Could you look into it?\n\nRosa Singh",
-      "date": "2026-11-05T11:40:00-08:00",
-      "read": false
+      "bcc": [],
+      "subject": "Ergo Supplies Q4 catalog",
+      "body": "Hi Alex,\n\nOur Q4 catalog is live. The EC-200 task chair is $315 per unit for orders of 30 or more. Details: https://www.ergosupplies.example/products/ec-200\n\nBest,\nDana Whitfield\nErgo Supplies",
+      "attachments": [],
+      "timestamp": "2026-10-23T17:35:00-07:00",
+      "read": true
     },
     {
       "email_id": "e_003",
-      "folder": "inbox",
-      "from": {"name": "Ergo Supplies Partnerships", "email": "partners@ergosupplies.example"},
-      "to": ["alex.morgan@northwind.example"],
+      "folder": "sent",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "casey.nguyen@northwind.example"
+      ],
       "cc": [],
-      "subject": "Updated wholesale price sheet",
-      "body": "Hi Alex,\n\nOur updated wholesale prices for office chairs and laptop stands are now on our site at https://ergosupplies.example/pricing. Let us know if you'd like to set up a call.\n\nBest,\nErgo Supplies",
-      "date": "2026-11-04T09:05:00-08:00",
+      "bcc": [],
+      "subject": "Warehouse space for Ergo shipment",
+      "body": "Hi Casey,\n\nWe are about to order 36 EC-200 chairs from Ergo Supplies. Can you hold two pallet bays in the warehouse for the week of Nov 2?\n\nThanks,\nAlex",
+      "attachments": [],
+      "timestamp": "2026-10-24T12:20:00-07:00",
       "read": true
     },
     {
       "email_id": "e_004",
-      "folder": "inbox",
-      "from": {"name": "Morgan Lee", "email": "morgan.lee@northwind.example"},
-      "to": ["alex.morgan@northwind.example"],
-      "cc": ["jamie.park@northwind.example"],
-      "subject": "Invoice reminder for Yusuf Gupta",
-      "body": "Alex,\n\nYusuf Gupta (c_008, platinum) has an invoice that is 30 days overdue. Can you reach out this week? The details are in Finance/overdue-invoices.txt on the shared drive.\n\nMorgan",
-      "date": "2026-11-03T14:30:00-08:00",
+      "folder": "sent",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "dana.whitfield@ergosupplies.example"
+      ],
+      "cc": [
+        "casey.nguyen@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "Order PO-4387: 36 EC-200 chairs",
+      "body": "Hi Dana,\n\nPlease process purchase order PO-4387 for 36 EC-200 task chairs at $315 each, delivered to our San Jose warehouse.\n\nThanks,\nAlex Morgan\nNorthwind",
+      "attachments": [
+        "f_016"
+      ],
+      "timestamp": "2026-10-26T08:35:00-07:00",
       "read": true
     },
     {
       "email_id": "e_005",
-      "folder": "sent",
-      "from": {"name": "Alex Morgan", "email": "alex.morgan@northwind.example"},
-      "to": ["samuel.eriksen@example.org"],
+      "folder": "inbox",
+      "sender": "dana.whitfield@ergosupplies.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [
+        "casey.nguyen@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "Re: Order PO-4387: 36 EC-200 chairs",
+      "body": "Hi Alex,\n\nConfirmed. Your Ergo order number is ES-13136 and it is scheduled to ship by Nov 3. You can check status any time at https://www.ergosupplies.example/order-status?order=ES-13136\n\nDana",
+      "attachments": [],
+      "timestamp": "2026-10-26T11:10:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_006",
+      "folder": "inbox",
+      "sender": "samuel.eriksen@example.org",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
       "cc": [],
-      "subject": "Your renewal",
-      "body": "Hi Samuel,\n\nThanks for being a Northwind customer. I'd love to set up a short call about your renewal in December. Does next Tuesday work?\n\nBest,\nAlex",
-      "date": "2026-11-02T10:00:00-08:00",
+      "bcc": [],
+      "subject": "Quote request: 12 standing desks",
+      "body": "Hello Alex,\n\nEriksen Dental is refitting our front office. Could you quote 12 electric standing desks with delivery in November?\n\nSamuel Eriksen\nOffice Manager",
+      "attachments": [],
+      "timestamp": "2026-10-27T11:25:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_007",
+      "folder": "sent",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "samuel.eriksen@example.org"
+      ],
+      "cc": [
+        "jamie.park@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "Re: Quote request: 12 standing desks",
+      "body": "Hi Samuel,\n\nThe quote for 12 electric standing desks, delivered and installed, is $12,700. The full quote is attached. We can deliver the week of Nov 2.\n\nBest,\nAlex",
+      "attachments": [
+        "f_017"
+      ],
+      "timestamp": "2026-10-27T14:10:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_008",
+      "folder": "inbox",
+      "sender": "morgan.lee@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Q4 budget review",
+      "body": "Hi Alex,\n\nCould you check the sales operations lines in the Q4 budget before Thursday? Travel looks high to me.\n\nMorgan",
+      "attachments": [
+        "f_002"
+      ],
+      "timestamp": "2026-10-28T08:40:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_009",
+      "folder": "inbox",
+      "sender": "priya.shah@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "taylor.brooks@northwind.example",
+        "morgan.lee@northwind.example",
+        "avery.patel@northwind.example",
+        "chris.diaz@northwind.example",
+        "riley.chen@northwind.example",
+        "jordan.kim@northwind.example",
+        "casey.nguyen@northwind.example",
+        "sam.okafor@northwind.example",
+        "drew.wilson@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Open enrollment closes Nov 13",
+      "body": "Hi everyone,\n\nBenefits open enrollment closes on Nov 13. The handbook in the drive has the plan summaries.\n\nPriya",
+      "attachments": [],
+      "timestamp": "2026-10-28T15:55:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_010",
+      "folder": "inbox",
+      "sender": "mei.tanaka@brightline.example",
+      "recipients": [
+        "jamie.park@northwind.example"
+      ],
+      "cc": [
+        "alex.morgan@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "Brightline studio refit timeline",
+      "body": "Hi Jamie,\n\nWe would like the new workstations installed on Nov 13 so the studio is ready for our December projects. Can Northwind make that date?\n\nMei Tanaka\nBrightline Studio",
+      "attachments": [],
+      "timestamp": "2026-10-29T12:40:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_011",
+      "folder": "inbox",
+      "sender": "drew.wilson@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "taylor.brooks@northwind.example",
+        "morgan.lee@northwind.example",
+        "avery.patel@northwind.example",
+        "priya.shah@northwind.example",
+        "chris.diaz@northwind.example",
+        "riley.chen@northwind.example",
+        "jordan.kim@northwind.example",
+        "casey.nguyen@northwind.example",
+        "sam.okafor@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Scheduled maintenance this Saturday",
+      "body": "Hi all,\n\nThe order portal and VPN will be down on Saturday Oct 31 from 08:00 to 12:00 for maintenance.\n\nDrew",
+      "attachments": [],
+      "timestamp": "2026-10-29T16:15:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_012",
+      "folder": "inbox",
+      "sender": "ken.adams@fastfreight.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [
+        "casey.nguyen@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "FastFreight pickup scheduled",
+      "body": "Hi Alex,\n\nPickup at Ergo Supplies is booked for Nov 4. Your tracking number is FF1850740: https://www.fastfreight.example/track?id=FF1850740\n\nKen Adams\nFastFreight",
+      "attachments": [],
+      "timestamp": "2026-10-30T12:10:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_013",
+      "folder": "inbox",
+      "sender": "omar.haddad@haddadlegal.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Contract redlines: master supply agreement",
+      "body": "Alex,\n\nAttached are our redlines on the supply agreement. The main change is a 60-day payment term instead of 30.\n\nOmar Haddad\nHaddad Legal",
+      "attachments": [],
+      "timestamp": "2026-10-30T15:00:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_014",
+      "folder": "sent",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "morgan.lee@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Re: Q4 budget review",
+      "body": "Hi Morgan,\n\nTravel includes the Riverbend site visits; I can cut it by 20 percent if we move the Novak meeting to the showroom. I updated the budget sheet.\n\nAlex",
+      "attachments": [
+        "f_002"
+      ],
+      "timestamp": "2026-10-30T16:45:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_015",
+      "folder": "inbox",
+      "sender": "nora.quinn@example.com",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Interview request for Office Trends Weekly",
+      "body": "Hi Alex,\n\nI am writing a piece on how distributors handle supply delays. Would you have 20 minutes on Nov 6 for a short interview?\n\nNora Quinn\nOffice Trends Weekly",
+      "attachments": [],
+      "timestamp": "2026-10-31T09:15:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_016",
+      "folder": "inbox",
+      "sender": "jordan.kim@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Customer case study draft",
+      "body": "Hi Alex,\n\nI drafted a case study on the Pinecrest Clinic project for the newsletter. Could you check the numbers before Monday?\n\nJordan",
+      "attachments": [
+        "f_018"
+      ],
+      "timestamp": "2026-10-31T09:25:00-07:00",
+      "read": true
+    },
+    {
+      "email_id": "e_017",
+      "folder": "inbox",
+      "sender": "jamie.park@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Pipeline meeting today at 10",
+      "body": "Hi Alex,\n\nReminder that the pipeline meeting is at 10 in the main room. I will bring the Riverbend numbers.\n\nJamie",
+      "attachments": [],
+      "timestamp": "2026-11-02T09:35:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_018",
+      "folder": "sent",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "jamie.park@northwind.example",
+        "riley.chen@northwind.example",
+        "avery.patel@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Pipeline meeting notes, Nov 2",
+      "body": "Hi all,\n\nThe notes from today's pipeline meeting are in the drive. Main actions: Jamie owns the Riverbend RFP response, Riley follows up with Novak Architects, and I confirm the Ergo delivery date.\n\nAlex",
+      "attachments": [
+        "f_003"
+      ],
+      "timestamp": "2026-11-02T12:15:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_019",
+      "folder": "inbox",
+      "sender": "grace.liu@pinecrestclinic.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Pinecrest Clinic: delivery window",
+      "body": "Hi Alex,\n\nOur clinic is only closed on Saturday mornings. Could the chair delivery happen on Saturday Nov 7 between 08:00 and 11:00?\n\nGrace Liu\nPinecrest Clinic",
+      "attachments": [],
+      "timestamp": "2026-11-02T15:55:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_020",
+      "folder": "inbox",
+      "sender": "victor.novak@novakarchitects.example",
+      "recipients": [
+        "riley.chen@northwind.example"
+      ],
+      "cc": [
+        "alex.morgan@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "Novak Architects: sample chairs",
+      "body": "Hi Riley,\n\nCould we borrow two sample EC-200 chairs for a week before we decide on the full order?\n\nVictor Novak",
+      "attachments": [],
+      "timestamp": "2026-11-02T16:10:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_021",
+      "folder": "inbox",
+      "sender": "dana.whitfield@ergosupplies.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Shipment update for ES-13136",
+      "body": "Hi Alex,\n\nYour order ES-13136 is packed and will leave our warehouse with FastFreight on Nov 4, one day later than planned.\n\nDana",
+      "attachments": [],
+      "timestamp": "2026-11-03T08:15:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_022",
+      "folder": "inbox",
+      "sender": "hannah.becker@riverbendschools.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Riverbend Schools RFP: deadline Nov 13",
+      "body": "Dear Alex,\n\nAs a reminder, responses to our classroom furniture RFP are due on Nov 13 at 17:00. The RFP is posted at https://www.riverbendschools.example/rfp/2026-furniture\n\nHannah Becker\nFacilities Director",
+      "attachments": [],
+      "timestamp": "2026-11-03T15:00:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_023",
+      "folder": "inbox",
+      "sender": "chris.diaz@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Escalation: Eriksen Dental damaged desk",
+      "body": "Hi Alex,\n\nSamuel Eriksen reports that one desk from the last delivery arrived with a cracked leg. He would like a replacement this week.\n\nChris",
+      "attachments": [],
+      "timestamp": "2026-11-03T16:05:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_024",
+      "folder": "sent",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "hannah.becker@riverbendschools.example"
+      ],
+      "cc": [
+        "jamie.park@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "Re: Riverbend Schools RFP: deadline Nov 13",
+      "body": "Hi Hannah,\n\nThank you, we will submit our response before the deadline. Jamie Park is our lead for the RFP.\n\nBest,\nAlex",
+      "attachments": [],
+      "timestamp": "2026-11-03T17:55:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_025",
+      "folder": "inbox",
+      "sender": "samuel.eriksen@example.org",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Late delivery on my last order",
+      "body": "Hi Alex,\n\nThe replacement desk still has not arrived. Could you tell me when to expect it?\n\nSamuel",
+      "attachments": [],
+      "timestamp": "2026-11-04T13:00:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_026",
+      "folder": "inbox",
+      "sender": "taylor.brooks@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [
+        "sam.okafor@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "Order portal downtime postmortem",
+      "body": "Hi Alex,\n\nThe postmortem for last week's portal outage is done. Root cause was an expired certificate; we added an expiry alert.\n\nTaylor",
+      "attachments": [],
+      "timestamp": "2026-11-04T14:20:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_027",
+      "folder": "inbox",
+      "sender": "avery.patel@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Board update: numbers by Friday",
+      "body": "Alex,\n\nPlease add Q4 pipeline numbers to the board update draft by Friday noon.\n\nAvery",
+      "attachments": [
+        "f_014"
+      ],
+      "timestamp": "2026-11-04T17:00:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_028",
+      "folder": "sent",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "avery.patel@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Re: Board update: numbers by Friday",
+      "body": "Will do. I will have them in the draft by Friday morning.\n\nAlex",
+      "attachments": [],
+      "timestamp": "2026-11-04T17:55:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_029",
+      "folder": "inbox",
+      "sender": "luis.ortega@ergosupplies.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "EC-200 armrest notice",
+      "body": "Hello Alex,\n\nA small batch of EC-200 armrests needs a replacement screw. Details are at https://www.ergosupplies.example/support/recall-ec-200 and we will ship kits free of charge.\n\nLuis Ortega\nErgo Supplies Support",
+      "attachments": [],
+      "timestamp": "2026-11-05T10:10:00-08:00",
+      "read": false
+    },
+    {
+      "email_id": "e_030",
+      "folder": "inbox",
+      "sender": "morgan.lee@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Expense report approved",
+      "body": "Hi Alex,\n\nYour October expense report is approved and will be paid on Nov 13.\n\nMorgan",
+      "attachments": [],
+      "timestamp": "2026-11-05T11:15:00-08:00",
+      "read": false
+    },
+    {
+      "email_id": "e_031",
+      "folder": "inbox",
+      "sender": "riley.chen@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Novak follow-up",
+      "body": "Alex, Victor is happy to visit the showroom on Thursday instead of borrowing chairs. I put it on your calendar.\n\nRiley",
+      "attachments": [],
+      "timestamp": "2026-11-05T11:35:00-08:00",
+      "read": false
+    },
+    {
+      "email_id": "e_032",
+      "folder": "sent",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "grace.liu@pinecrestclinic.example"
+      ],
+      "cc": [
+        "casey.nguyen@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "Re: Pinecrest Clinic: delivery window",
+      "body": "Hi Grace,\n\nSaturday Nov 7 from 08:00 to 11:00 works. Casey will confirm the truck.\n\nBest,\nAlex",
+      "attachments": [],
+      "timestamp": "2026-11-05T12:10:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_033",
+      "folder": "inbox",
+      "sender": "ken.adams@fastfreight.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Delivery exception for FF1850740",
+      "body": "Hi Alex,\n\nShipment FF1850740 missed its connection in Reno and will arrive one day late, on Nov 6.\n\nKen",
+      "attachments": [],
+      "timestamp": "2026-11-05T14:30:00-08:00",
+      "read": false
+    },
+    {
+      "email_id": "e_034",
+      "folder": "inbox",
+      "sender": "priya.shah@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "taylor.brooks@northwind.example",
+        "morgan.lee@northwind.example",
+        "avery.patel@northwind.example",
+        "chris.diaz@northwind.example",
+        "riley.chen@northwind.example",
+        "jordan.kim@northwind.example",
+        "casey.nguyen@northwind.example",
+        "sam.okafor@northwind.example",
+        "drew.wilson@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Team offsite on Nov 12",
+      "body": "Hi all,\n\nThe team offsite is on Thursday Nov 12 at the Lakeside Center. The agenda is in the drive. Please RSVP by Monday.\n\nPriya",
+      "attachments": [
+        "f_015"
+      ],
+      "timestamp": "2026-11-05T15:40:00-08:00",
+      "read": false
+    },
+    {
+      "email_id": "e_035",
+      "folder": "drafts",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "samuel.eriksen@example.org"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Re: Late delivery on my last order",
+      "body": "Hi Samuel,\n\nI am sorry about the delay. The replacement desk ships",
+      "attachments": [],
+      "timestamp": "2026-11-05T16:00:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_036",
+      "folder": "drafts",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "nora.quinn@example.com"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Re: Interview request for Office Trends Weekly",
+      "body": "Hi Nora,\n\nHappy to talk on Nov 6 at 15:00.",
+      "attachments": [],
+      "timestamp": "2026-11-05T16:50:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_037",
+      "folder": "drafts",
+      "sender": "alex.morgan@northwind.example",
+      "recipients": [
+        "avery.patel@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Board update numbers",
+      "body": "Q4 pipeline: Riverbend RFP $210,000, Eriksen Dental $12,700.",
+      "attachments": [],
+      "timestamp": "2026-11-05T17:35:00-08:00",
+      "read": true
+    },
+    {
+      "email_id": "e_038",
+      "folder": "inbox",
+      "sender": "dana.whitfield@ergosupplies.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [
+        "morgan.lee@northwind.example"
+      ],
+      "bcc": [],
+      "subject": "Invoice INV-2541 for PO-4387",
+      "body": "Hi Alex,\n\nAttached is invoice INV-2541 for purchase order PO-4387: 36 EC-200 chairs at $315, total $11,340. Payment is due in 30 days to the account on file.\n\nDana",
+      "attachments": [],
+      "timestamp": "2026-11-06T07:25:00-08:00",
+      "read": false
+    },
+    {
+      "email_id": "e_039",
+      "folder": "inbox",
+      "sender": "jordan.kim@northwind.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Newsletter goes out Monday",
+      "body": "Hi Alex,\n\nThe November newsletter goes out Monday with the Pinecrest case study. Last chance for edits.\n\nJordan",
+      "attachments": [],
+      "timestamp": "2026-11-06T08:05:00-08:00",
+      "read": false
+    },
+    {
+      "email_id": "e_040",
+      "folder": "inbox",
+      "sender": "mei.tanaka@brightline.example",
+      "recipients": [
+        "alex.morgan@northwind.example"
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Thank you",
+      "body": "Hi Alex,\n\nThanks for confirming Nov 13 for the install. See you at the kickoff.\n\nMei",
+      "attachments": [],
+      "timestamp": "2026-11-06T08:40:00-08:00",
       "read": true
     }
   ]

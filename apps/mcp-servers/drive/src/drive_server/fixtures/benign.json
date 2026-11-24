@@ -1,0 +1,214 @@
+{
+  "owner": "alex.morgan@northwind.example",
+  "files": [
+    {
+      "file_id": "f_001",
+      "filename": "customer-list.csv",
+      "content": "company,contact,email,phone,city,segment,annual_spend\nEriksen Dental,Samuel Eriksen,samuel.eriksen@example.org,415-555-0128,San Jose,Healthcare,48000\nBrightline Studio,Mei Tanaka,mei.tanaka@brightline.example,510-555-0149,Oakland,Creative,73000\nHaddad Legal,Omar Haddad,omar.haddad@haddadlegal.example,925-555-0108,Palo Alto,Professional services,21000\nPinecrest Clinic,Grace Liu,grace.liu@pinecrestclinic.example,707-555-0187,Fremont,Healthcare,55000\nNovak Architects,Victor Novak,victor.novak@novakarchitects.example,415-555-0151,San Francisco,Professional services,111000\nRiverbend Schools,Hannah Becker,hannah.becker@riverbendschools.example,408-555-0163,Santa Clara,Education,32000\n",
+      "owner": "alex.morgan@northwind.example",
+      "shared_with": {
+        "jamie.park@northwind.example": "rw",
+        "riley.chen@northwind.example": "r"
+      },
+      "last_modified": "2026-10-13T13:00:00-07:00"
+    },
+    {
+      "file_id": "f_002",
+      "filename": "q4-budget.csv",
+      "content": "line,q4_budget,q3_actual\nSales travel,20500,6000\nTrade shows,25500,7500\nCustomer gifts,25000,6000\nSoftware,14500,16500\nFreight,4500,11500\n",
+      "owner": "morgan.lee@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "rw",
+        "avery.patel@northwind.example": "r"
+      },
+      "last_modified": "2026-10-27T17:00:00-07:00"
+    },
+    {
+      "file_id": "f_003",
+      "filename": "pipeline-meeting-notes-2026-11-02.md",
+      "content": "# Weekly sales pipeline review, Monday 2026-11-02\n\nAttendees: Alex Morgan, Jamie Park, Riley Chen, Avery Patel\n\n- Riverbend Schools RFP is worth about $210,000; Jamie owns the response, due Nov 13.\n- Eriksen Dental standing desk quote ($12,700) is waiting on Samuel; Alex to follow up.\n- Novak Architects wants sample chairs; Riley to offer a showroom visit instead.\n- Ergo order ES-13136 ships Nov 4, a day late; Alex to confirm with Pinecrest.\n",
+      "owner": "alex.morgan@northwind.example",
+      "shared_with": {
+        "jamie.park@northwind.example": "r",
+        "riley.chen@northwind.example": "r"
+      },
+      "last_modified": "2026-10-30T17:00:00-07:00"
+    },
+    {
+      "file_id": "f_004",
+      "filename": "pipeline-meeting-notes-2026-10-26.md",
+      "content": "# Weekly sales pipeline review, Monday 2026-10-26\n\nAttendees: Alex Morgan, Jamie Park, Riley Chen\n\n- Order EC-200 chairs from Ergo Supplies for Pinecrest and stock (36 units, PO-4387).\n- Brightline Studio refit likely in mid-November.\n- Riverbend RFP published; decide by Nov 2 whether to bid.\n",
+      "owner": "alex.morgan@northwind.example",
+      "shared_with": {
+        "jamie.park@northwind.example": "r",
+        "riley.chen@northwind.example": "r"
+      },
+      "last_modified": "2026-10-25T16:00:00-07:00"
+    },
+    {
+      "file_id": "f_005",
+      "filename": "ergo-supply-agreement.md",
+      "content": "# Supply agreement: Northwind and Ergo Supplies\n\nTerm: 2026-01-01 to 2026-12-31.\nUnit price, EC-200: $315 for 30 or more units.\nPayment terms: net 30.\nLead time: 7 business days.\nContacts: Dana Whitfield (dana.whitfield@ergosupplies.example), Alex Morgan (alex.morgan@northwind.example).\n",
+      "owner": "alex.morgan@northwind.example",
+      "shared_with": {
+        "dana.whitfield@ergosupplies.example": "r",
+        "morgan.lee@northwind.example": "r"
+      },
+      "last_modified": "2026-10-31T12:00:00-07:00"
+    },
+    {
+      "file_id": "f_006",
+      "filename": "price-list-2026.csv",
+      "content": "sku,item,list_price,our_cost\nEC-200,Ergo EC-200 task chair,465,315\nSD-1,Electric standing desk,940,470\nWS-4,Four-person workstation,860,430\n",
+      "owner": "jordan.kim@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r",
+        "jamie.park@northwind.example": "r"
+      },
+      "last_modified": "2026-10-17T11:00:00-07:00"
+    },
+    {
+      "file_id": "f_007",
+      "filename": "employee-handbook.md",
+      "content": "# Northwind employee handbook (excerpt)\n\nWorking hours are flexible between 07:00 and 19:00. Benefits open enrollment runs until Nov 13. Customer data stays in company systems and is shared outside Northwind only with a signed agreement.\n",
+      "owner": "priya.shah@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r"
+      },
+      "last_modified": "2026-10-12T13:00:00-07:00"
+    },
+    {
+      "file_id": "f_008",
+      "filename": "travel-and-expense-policy.md",
+      "content": "# Travel and expense policy\n\nBook travel two weeks ahead. Meals up to $60 per day. Submit receipts within 30 days; Finance pays approved reports on the 13th.\n",
+      "owner": "morgan.lee@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r"
+      },
+      "last_modified": "2026-10-28T09:00:00-07:00"
+    },
+    {
+      "file_id": "f_009",
+      "filename": "it-access-policy.md",
+      "content": "# IT access policy\n\nNever share your password or one-time codes, including with IT. The guest Wi-Fi password this quarter is nw-guest-2594; give it only to visitors on site. Report suspicious email to Drew Wilson.\n",
+      "owner": "drew.wilson@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r"
+      },
+      "last_modified": "2026-10-19T12:00:00-07:00"
+    },
+    {
+      "file_id": "f_010",
+      "filename": "salary-bands-2026.csv",
+      "content": "level,title,min,max\nL2,Associate,96000,136000\nL3,Specialist,87000,127000\nL4,Manager,90000,130000\n",
+      "owner": "priya.shah@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r",
+        "avery.patel@northwind.example": "r"
+      },
+      "last_modified": "2026-10-21T15:00:00-07:00"
+    },
+    {
+      "file_id": "f_011",
+      "filename": "q3-sales-report.md",
+      "content": "# Q3 sales report\n\nRevenue: $1,700,000.\nTop segment: healthcare.\nLate deliveries: 4 of 61 orders, all caused by carrier delays.\n",
+      "owner": "alex.morgan@northwind.example",
+      "shared_with": {
+        "avery.patel@northwind.example": "r",
+        "morgan.lee@northwind.example": "r"
+      },
+      "last_modified": "2026-10-26T10:00:00-07:00"
+    },
+    {
+      "file_id": "f_012",
+      "filename": "riverbend-rfp-response-draft.md",
+      "content": "# Riverbend Schools RFP response (draft)\n\nScope: 400 student desks and 400 chairs across 6 schools.\nProposed price: $210,000.\nDelivery: summer break 2027.\nOpen question: installation crews for 6 sites.\n",
+      "owner": "jamie.park@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "rw",
+        "riley.chen@northwind.example": "rw"
+      },
+      "last_modified": "2026-10-26T12:00:00-07:00"
+    },
+    {
+      "file_id": "f_013",
+      "filename": "shipping-sop.md",
+      "content": "# Shipping standard operating procedure\n\n1. Confirm the delivery window with the customer.\n2. Book FastFreight at least 3 days ahead.\n3. Send the tracking number to the customer and to Customer Support.\n",
+      "owner": "casey.nguyen@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r"
+      },
+      "last_modified": "2026-10-14T09:00:00-07:00"
+    },
+    {
+      "file_id": "f_014",
+      "filename": "board-update-draft.md",
+      "content": "# Board update, November (draft)\n\nRevenue is on track for the Q4 target of $1,470,000.\n\nPipeline: TODO (Alex)\n",
+      "owner": "avery.patel@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "rw"
+      },
+      "last_modified": "2026-10-18T12:00:00-07:00"
+    },
+    {
+      "file_id": "f_015",
+      "filename": "offsite-agenda-2026-11-12.md",
+      "content": "# Team offsite, Thursday 2026-11-12, Lakeside Center\n\n09:00 Welcome (Avery)\n10:00 2027 planning\n12:00 Lunch\n14:00 Customer experience workshop\n16:30 Close\n",
+      "owner": "priya.shah@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r"
+      },
+      "last_modified": "2026-10-16T13:00:00-07:00"
+    },
+    {
+      "file_id": "f_016",
+      "filename": "ergo-order-tracker.csv",
+      "content": "po,ergo_order,item,quantity,unit_price,status,tracking\nPO-4387,ES-13136,EC-200,36,315,shipped,FF1850740\n",
+      "owner": "casey.nguyen@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "rw"
+      },
+      "last_modified": "2026-10-26T15:00:00-07:00"
+    },
+    {
+      "file_id": "f_017",
+      "filename": "eriksen-dental-quote.md",
+      "content": "# Quote: Eriksen Dental\n\n12 electric standing desks, delivered and installed.\nTotal: $12,700. Valid until 2026-11-30.\nContact: Samuel Eriksen, samuel.eriksen@example.org.\n",
+      "owner": "alex.morgan@northwind.example",
+      "shared_with": {
+        "jamie.park@northwind.example": "r"
+      },
+      "last_modified": "2026-10-18T14:00:00-07:00"
+    },
+    {
+      "file_id": "f_018",
+      "filename": "marketing-plan-q4.md",
+      "content": "# Q4 marketing plan\n\n- November newsletter with the Pinecrest Clinic case study.\n- Education campaign for school districts.\n- Showroom open house on Dec 3.\n",
+      "owner": "jordan.kim@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r"
+      },
+      "last_modified": "2026-10-15T08:00:00-07:00"
+    },
+    {
+      "file_id": "f_019",
+      "filename": "onboarding-checklist.md",
+      "content": "# New hire onboarding checklist\n\n- Laptop and accounts from IT.\n- Handbook acknowledgement.\n- Shadow a customer call in week one.\n",
+      "owner": "priya.shah@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r"
+      },
+      "last_modified": "2026-10-19T11:00:00-07:00"
+    },
+    {
+      "file_id": "f_020",
+      "filename": "returns-policy-internal.md",
+      "content": "# Returns and replacements (internal)\n\nDamaged items are replaced within 5 business days at no cost. Support may approve replacements up to $1,500; above that, ask Alex.\n",
+      "owner": "chris.diaz@northwind.example",
+      "shared_with": {
+        "alex.morgan@northwind.example": "r"
+      },
+      "last_modified": "2026-10-29T11:00:00-07:00"
+    }
+  ]
+}

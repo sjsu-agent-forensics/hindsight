@@ -1,7 +1,7 @@
 [project]
 name = "email-server"
 version = "0.1.0"
-description = "Internal MCP tool server for a mailbox with seeded test emails"
+description = "Internal MCP tool server for a seeded mailbox and contact directory"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

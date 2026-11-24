@@ -1,0 +1,180 @@
+{
+  "people": [
+    {
+      "handle": "alex",
+      "name": "Alex Morgan",
+      "email": "alex.morgan@northwind.example",
+      "phone": "415-555-0136",
+      "role": "Sales Operations Manager",
+      "internal": true
+    },
+    {
+      "handle": "jamie",
+      "name": "Jamie Park",
+      "email": "jamie.park@northwind.example",
+      "phone": "415-555-0190",
+      "role": "Account Executive",
+      "internal": true
+    },
+    {
+      "handle": "taylor",
+      "name": "Taylor Brooks",
+      "email": "taylor.brooks@northwind.example",
+      "phone": "415-555-0160",
+      "role": "Engineering Lead",
+      "internal": true
+    },
+    {
+      "handle": "morgan",
+      "name": "Morgan Lee",
+      "email": "morgan.lee@northwind.example",
+      "phone": "415-555-0140",
+      "role": "Finance Manager",
+      "internal": true
+    },
+    {
+      "handle": "avery",
+      "name": "Avery Patel",
+      "email": "avery.patel@northwind.example",
+      "phone": "415-555-0175",
+      "role": "Chief Executive Officer",
+      "internal": true
+    },
+    {
+      "handle": "priya",
+      "name": "Priya Shah",
+      "email": "priya.shah@northwind.example",
+      "phone": "415-555-0185",
+      "role": "People Operations Lead",
+      "internal": true
+    },
+    {
+      "handle": "chris",
+      "name": "Chris Diaz",
+      "email": "chris.diaz@northwind.example",
+      "phone": "415-555-0161",
+      "role": "Customer Support Specialist",
+      "internal": true
+    },
+    {
+      "handle": "riley",
+      "name": "Riley Chen",
+      "email": "riley.chen@northwind.example",
+      "phone": "415-555-0109",
+      "role": "Account Executive",
+      "internal": true
+    },
+    {
+      "handle": "jordan",
+      "name": "Jordan Kim",
+      "email": "jordan.kim@northwind.example",
+      "phone": "415-555-0133",
+      "role": "Marketing Manager",
+      "internal": true
+    },
+    {
+      "handle": "casey",
+      "name": "Casey Nguyen",
+      "email": "casey.nguyen@northwind.example",
+      "phone": "415-555-0130",
+      "role": "Logistics Coordinator",
+      "internal": true
+    },
+    {
+      "handle": "sam",
+      "name": "Sam Okafor",
+      "email": "sam.okafor@northwind.example",
+      "phone": "415-555-0107",
+      "role": "Software Engineer",
+      "internal": true
+    },
+    {
+      "handle": "drew",
+      "name": "Drew Wilson",
+      "email": "drew.wilson@northwind.example",
+      "phone": "415-555-0126",
+      "role": "IT Administrator",
+      "internal": true
+    },
+    {
+      "handle": "samuel",
+      "name": "Samuel Eriksen",
+      "email": "samuel.eriksen@example.org",
+      "phone": "415-555-0128",
+      "role": "Office Manager, Eriksen Dental",
+      "internal": false
+    },
+    {
+      "handle": "dana",
+      "name": "Dana Whitfield",
+      "email": "dana.whitfield@ergosupplies.example",
+      "phone": "408-555-0138",
+      "role": "Account Manager, Ergo Supplies",
+      "internal": false
+    },
+    {
+      "handle": "luis",
+      "name": "Luis Ortega",
+      "email": "luis.ortega@ergosupplies.example",
+      "phone": "650-555-0132",
+      "role": "Support Engineer, Ergo Supplies",
+      "internal": false
+    },
+    {
+      "handle": "mei",
+      "name": "Mei Tanaka",
+      "email": "mei.tanaka@brightline.example",
+      "phone": "510-555-0149",
+      "role": "Studio Director, Brightline Studio",
+      "internal": false
+    },
+    {
+      "handle": "omar",
+      "name": "Omar Haddad",
+      "email": "omar.haddad@haddadlegal.example",
+      "phone": "925-555-0108",
+      "role": "Partner, Haddad Legal",
+      "internal": false
+    },
+    {
+      "handle": "grace",
+      "name": "Grace Liu",
+      "email": "grace.liu@pinecrestclinic.example",
+      "phone": "707-555-0187",
+      "role": "Operations Lead, Pinecrest Clinic",
+      "internal": false
+    },
+    {
+      "handle": "victor",
+      "name": "Victor Novak",
+      "email": "victor.novak@novakarchitects.example",
+      "phone": "415-555-0151",
+      "role": "Principal, Novak Architects",
+      "internal": false
+    },
+    {
+      "handle": "hannah",
+      "name": "Hannah Becker",
+      "email": "hannah.becker@riverbendschools.example",
+      "phone": "408-555-0163",
+      "role": "Facilities Director, Riverbend Schools",
+      "internal": false
+    },
+    {
+      "handle": "ken",
+      "name": "Ken Adams",
+      "email": "ken.adams@fastfreight.example",
+      "phone": "650-555-0123",
+      "role": "Account Representative, FastFreight",
+      "internal": false
+    },
+    {
+      "handle": "nora",
+      "name": "Nora Quinn",
+      "email": "nora.quinn@example.com",
+      "phone": "510-555-0176",
+      "role": "Reporter, Office Trends Weekly",
+      "internal": false
+    }
+  ]
+}
