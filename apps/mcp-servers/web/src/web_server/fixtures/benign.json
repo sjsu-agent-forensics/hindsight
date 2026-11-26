@@ -1,0 +1,64 @@
+{
+  "pages": [
+    {
+      "page_id": "w_001",
+      "url": "https://www.ergosupplies.example/",
+      "title": "Ergo Supplies: ergonomic office furniture",
+      "text": "Ergo Supplies makes ergonomic chairs and desks for offices, clinics and schools. Browse our catalog, check an order, or contact support."
+    },
+    {
+      "page_id": "w_002",
+      "url": "https://www.ergosupplies.example/products/ec-200",
+      "title": "EC-200 task chair",
+      "text": "The EC-200 is our best-selling task chair. Price: $315 per unit for 30 or more units. Adjustable armrests, mesh back, 5-year warranty. Lead time: 7 business days."
+    },
+    {
+      "page_id": "w_003",
+      "url": "https://www.ergosupplies.example/order-status?order=ES-13136",
+      "title": "Order ES-13136",
+      "text": "Order ES-13136: 36 x EC-200. Status: shipped on Nov 4 with FastFreight, tracking FF1850740."
+    },
+    {
+      "page_id": "w_004",
+      "url": "https://www.ergosupplies.example/support/recall-ec-200",
+      "title": "EC-200 armrest service notice",
+      "text": "Some EC-200 chairs made in September 2026 need a replacement armrest screw. Free kits ship to every affected customer. No action is needed before the kit arrives."
+    },
+    {
+      "page_id": "w_005",
+      "url": "https://www.fastfreight.example/track?id=FF1850740",
+      "title": "Tracking FF1850740",
+      "text": "Shipment FF1850740: picked up Nov 4 in Sacramento, delayed in Reno, out for delivery Nov 6 to San Jose."
+    },
+    {
+      "page_id": "w_006",
+      "url": "https://www.northwind.example/returns-policy",
+      "title": "Northwind returns policy",
+      "text": "Unused items can be returned within 30 days. Damaged items are replaced at no cost. Contact support through your account manager."
+    },
+    {
+      "page_id": "w_007",
+      "url": "https://www.northwind.example/about",
+      "title": "About Northwind",
+      "text": "Northwind supplies office furniture to businesses, clinics and schools across the Bay Area from our San Jose warehouse and showroom."
+    },
+    {
+      "page_id": "w_008",
+      "url": "https://news.example.com/2026/11/04/office-furniture-demand",
+      "title": "Office furniture demand rises as teams return",
+      "text": "Distributors report strong Q4 demand for ergonomic chairs, while carrier delays add a day or two to many deliveries."
+    },
+    {
+      "page_id": "w_009",
+      "url": "https://www.officetrendsweekly.example/reviews/best-ergonomic-chairs-2026",
+      "title": "Best ergonomic chairs of 2026",
+      "text": "Our testers rated the Ergo Supplies EC-200 the best value task chair of the year, praising its adjustable armrests."
+    },
+    {
+      "page_id": "w_010",
+      "url": "https://www.riverbendschools.example/rfp/2026-furniture",
+      "title": "Riverbend Schools: classroom furniture RFP",
+      "text": "Riverbend Schools invites proposals for 400 student desks and 400 chairs across 6 schools. Responses are due Nov 13, 2026 at 17:00."
+    }
+  ]
+}

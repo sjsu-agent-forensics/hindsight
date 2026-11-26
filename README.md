@@ -4,9 +4,10 @@ Post-execution forensics framework for compromised LLM-based agent systems.
 
 The demos under `demos/` are the baseline the framework builds on: a LangGraph ReAct agent
 (`react-agent`) and an agent that reaches its tools over MCP (`mcp-enabled-agent`). The MCP tool
-servers it calls (`math-server`, `weather-server`) live under `apps/mcp-servers/`. These were moved
-here from the earlier `agency` prototype repo. The demos use a local Ollama model (`llama3.2:3b` at
-`http://localhost:11434` by default; see `hindsight.llm.get_llm`).
+servers live under `apps/mcp-servers/`: the five internal workspace servers the MCP demo calls, plus
+`math-server` and `weather-server`, moved here from the earlier `agency` prototype repo. The demos
+use a local Ollama model (`qwen3:4b` at `http://localhost:11434` by default; see
+`hindsight.llm.get_llm`).
 
 ## Layout
 
@@ -14,17 +15,18 @@ A [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): one l
 virtual environment at the root, shared by every member.
 
 ```
-apps/agent/                the ReAct agent hindsight protects; all its tools go through the interposer
-apps/interposer/           MCP gateway between the agent and its tool servers
-apps/launcher/             runs the agent once under a hindsight session registered with the interposer
-apps/mcp-servers/          one directory per MCP tool server, each its own project (not members)
-packages/hindsight-core/   code shared by the apps and demos (imported as `hindsight`)
-packages/provenance/       value-matching provenance index, used by the interposer (and replay)
-packages/rule-engine/      rule format, evaluation and trace replay, used by the interposer
-packages/trace-schema/     trace event format shared by the interposer and the agent
-demos/                     one directory per demo, each its own package
-rules/                     the interposer's rules, one JSON file per rule
-traces/                    session traces written at runtime, one directory per session (ignored)
+apps/agent/                    the ReAct agent hindsight protects; all its tools go through the interposer
+apps/interposer/               MCP gateway between the agent and its tool servers
+apps/launcher/                 runs the agent once under a hindsight session registered with the interposer
+apps/mcp-servers/              one directory per MCP tool server, each its own project (not members)
+packages/hindsight-core/       code shared by the apps and demos (imported as `hindsight`)
+packages/hindsight-server-kit/ code shared by the internal MCP servers (not a member; see below)
+packages/provenance/           value-matching provenance index, used by the interposer (and replay)
+packages/rule-engine/          rule format, evaluation and trace replay, used by the interposer
+packages/trace-schema/         trace event format shared by the interposer and the agent
+demos/                         one directory per demo, each its own package
+rules/                         the interposer's rules, one JSON file per rule
+traces/                        session traces written at runtime, one directory per session (ignored)
 ```
 
 `apps/agent`, `apps/interposer` and `apps/launcher` are workspace members, listed by name in the
@@ -47,6 +49,7 @@ apps/
     ...
 packages/
   hindsight-core/     shared basics (LLM factory, config)
+  hindsight-server-kit/  sessions, control endpoint, effect log for the internal MCP servers
   rule-engine/        rule vocabulary + evaluator, used by interposer AND forensics
   trace-schema/       session/event record format, used by agent, interposer, forensics
 demos/                current baseline demos, kept as reference
@@ -76,8 +79,7 @@ uv run --package react-agent react-agent
 uv run --package mcp-enabled-agent mcp-enabled-agent
 ```
 
-`mcp-enabled-agent` also needs its tool servers set up, and `weather-server` running (see
-below).
+`mcp-enabled-agent` also needs the internal workspace servers running (see below).
 
 ## Running the agent
 
@@ -104,32 +106,62 @@ and each needs its own one-time setup:
 ```bash
 uv sync --project apps/mcp-servers/math
 uv sync --project apps/mcp-servers/weather
+uv sync --project apps/mcp-servers/email
+uv sync --project apps/mcp-servers/web
+uv sync --project apps/mcp-servers/drive
+uv sync --project apps/mcp-servers/chat
+uv sync --project apps/mcp-servers/calendar
 ```
 
-The two use different transports, which is what decides whether you start them by hand:
+They use different transports, which is what decides whether you start them by hand:
 
-| server           | transport | address                          | started by                          |
-| ---------------- | --------- | -------------------------------- | ----------------------------------- |
-| `math-server`    | stdio     | none -- stdin/stdout             | the demo, or the interposer         |
-| `weather-server` | http      | `http://127.0.0.1:8001/api/mcp`  | you, beforehand                     |
-| `faults-server`  | stdio     | none -- stdin/stdout             | the interposer's Phase 4 check only |
+| server            | transport | address                         | started by                          |
+| ----------------- | --------- | ------------------------------- | ----------------------------------- |
+| `math-server`     | stdio     | none -- stdin/stdout            | the interposer                      |
+| `weather-server`  | http      | `http://127.0.0.1:8001/api/mcp` | you, beforehand                     |
+| `email-server`    | http      | `http://127.0.0.1:8012/api/mcp` | you, beforehand                     |
+| `web-server`      | http      | `http://127.0.0.1:8013/api/mcp` | you, beforehand                     |
+| `drive-server`    | http      | `http://127.0.0.1:8014/api/mcp` | you, beforehand                     |
+| `chat-server`     | http      | `http://127.0.0.1:8016/api/mcp` | you, beforehand                     |
+| `calendar-server` | http      | `http://127.0.0.1:8017/api/mcp` | you, beforehand                     |
+| `faults-server`   | stdio     | none -- stdin/stdout            | the interposer's Phase 4 check only |
+| `scenario-*`      | stdio     | none -- stdin/stdout            | the interposer's attack scenarios only |
+
+The internal servers (`email`, `web`, `drive`, `chat`, `calendar`) give the agent a synthetic
+workspace: it acts as the assistant of Alex Morgan at the fictional company Northwind. Their 35
+tools follow the names and arguments of AgentDojo's Workspace and Slack suites. They are built on
+the shared `hindsight-server-kit` (`packages/hindsight-server-kit/`, a library, not a server).
+Each keeps its data per session, picked by a `Hindsight-Session` request header, and also serves a
+control endpoint on its MCP port plus 100 (8112 to 8117) for seeding, reading back and discarding
+sessions. A request with no header uses one default state, so the `fastmcp` commands below work on
+them unchanged. See `packages/hindsight-server-kit/README.md`. Run each server's tests with
+`uv run --project apps/mcp-servers/<name> pytest apps/mcp-servers/<name>`.
+
+All of their data is generated from seed 295 by `scripts/generate_workspace.py`, which writes each
+server's `fixtures/benign.json` and the kit's shared people directory. Edit the generator, not the
+JSON, then rerun it; `python scripts/generate_workspace.py --check` (also covered by the kit's
+tests) fails when a fixture is out of date.
 
 `math-server` speaks stdio, so whoever uses it spawns it as a subprocess and you never start it
-yourself: `mcp-enabled-agent` directly, or the interposer once per session for `apps/agent`. Both
-launch the console script out of that server's own `.venv`, which is what keeps the two
-incompatible `mcp` versions apart, so the `uv sync` above is what makes it work.
+yourself: the interposer does, once per session for `apps/agent`. It launches the console script
+out of that server's own `.venv`, which is what keeps the two incompatible `mcp` versions apart, so
+the `uv sync` above is what makes it work.
 
-`weather-server` listens on a port and runs until you stop it, so start it in its own terminal
-before the demo:
+To start every HTTP server at once, in one terminal, run the launcher from the repo root. It waits
+until each server is listening, prints their addresses, and stops them all on Ctrl-C:
+
+```bash
+python scripts/launch_servers.py                 # every HTTP server
+python scripts/launch_servers.py email drive     # only these
+```
+
+It needs only the standard library, and `uv run` inside it syncs each server's `.venv` on first
+start. Add each new internal server to `SERVERS` in the script. To start one server by hand instead:
+
+`weather-server` listens on a port and runs until you stop it, so start it in its own terminal:
 
 ```bash
 uv run --project apps/mcp-servers/weather weather-server   # Ctrl-C to quit
-```
-
-Then run the agent from a second terminal:
-
-```bash
-uv run --package mcp-enabled-agent mcp-enabled-agent
 ```
 
 Only one process can hold port 8001; if the server fails with `error while attempting to bind`,
@@ -166,8 +198,8 @@ form.
 
 ## The MCP server exception
 
-`apps/mcp-servers/*` is listed under `exclude` in the root `[tool.uv.workspace]`, and each server
-there has its own `.venv`. This is deliberate, and the one place the single-environment rule does
+`apps/mcp-servers/*` and `packages/hindsight-server-kit` are listed under `exclude` in the root
+`[tool.uv.workspace]`, and each server has its own `.venv`. This is deliberate, and the one place the single-environment rule does
 not hold.
 
 The two sides need incompatible majors of `mcp`, and a workspace resolves to a single set of
@@ -192,8 +224,9 @@ resolution.
 Two consequences worth knowing:
 
 - MCP servers cannot depend on `hindsight-core`, because that would pull `langchain-mcp-adapters`
-  and its `mcp<2` cap back into the server's environment. Shared code has to reach it some other
-  way.
+  and its `mcp<2` cap back into the server's environment. Code the servers share lives in
+  `packages/hindsight-server-kit`, which needs `fastmcp`, so it is excluded from the workspace too
+  and each server installs it as a path dependency.
 - `uv sync --all-packages` does not touch it. Set it up separately:
 
 ```bash

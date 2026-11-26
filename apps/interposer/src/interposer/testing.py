@@ -102,21 +102,23 @@ def running_gateway(
     idle_timeout: float = 60,
     upstream_timeout: float = 30,
     rules_dir: Path | None = None,
+    trace_dir: Path | None = None,
 ) -> Iterator[RunningGateway]:
     """Serve a gateway for ``upstreams`` on a free port for the duration of the block.
 
     Sessions are registered under the rule files in ``rules_dir``; with none, every call
     is allowed.
 
-    Its logs and traces go to a temporary directory, removed afterwards. Leaving the
-    block ends every open session, stopping its children, as a gateway shutdown does.
+    Its logs go to a temporary directory, removed afterwards, and so do its traces
+    unless ``trace_dir`` is given. Leaving the block ends every open session, stopping
+    its children, as a gateway shutdown does.
     """
     with tempfile.TemporaryDirectory() as temp_dir:
         log_dir = Path(temp_dir) / "logs"
         app = build_app(
             upstreams,
             log_dir,
-            Path(temp_dir) / "traces",
+            trace_dir or Path(temp_dir) / "traces",
             idle_timeout=idle_timeout,
             upstream_timeout=upstream_timeout,
             rules=DirectoryRuleSource(rules_dir) if rules_dir else None,

@@ -15,7 +15,7 @@ def generator_node_factory() -> Callable[[State], dict]:
     """
 
     def generator_node(state: State) -> dict:
-        llm_with_tools = get_llm(reasoning=True).bind_tools([get_local_datetime])
+        llm_with_tools = get_llm(reasoning=None).bind_tools([get_local_datetime])
         response = llm_with_tools.invoke(state["messages"])
 
         return {"messages": [response]}

@@ -153,15 +153,20 @@ uv run --package interposer pytest apps/interposer -m "not slow"  # skip the pro
 `uv sync --project apps/mcp-servers/faults`. The helpers the tests share are in
 `interposer.testing`. The trace join itself is tested in `packages/trace-schema`.
 
-Two scripts stay scripts, since they need things a test cannot provide:
+Three scripts stay scripts, since they need things a test cannot provide:
 
 ```bash
 # median per-call latency, direct vs through a running gateway (needs weather-server running)
-uv run --package interposer python apps/interposer/scripts/bench_latency.py     http://127.0.0.1:8001/api/mcp http://127.0.0.1:8000 weather weather_san_jose
+uv run --package interposer python apps/interposer/scripts/bench_latency.py \
+    http://127.0.0.1:8001/api/mcp http://127.0.0.1:8000 weather weather_san_jose
 
 # after a launcher run, check that its two traces are complete and join exactly
 uv run --package interposer python apps/interposer/scripts/check_traces.py traces/<session-id>
+
+# the end-to-end attack scenarios with the real agent, recorded and then blocked (Phase 7)
+uv run --package interposer python apps/interposer/scripts/run_scenarios.py
 ```
 
 A real agent run depends on a model, so its traces are checked after the fact rather than in a
-test; the launcher prints the trace directory when it ends.
+test; the launcher prints the trace directory when it ends. The scenarios are described in
+[`scenarios/README.md`](scenarios/README.md).

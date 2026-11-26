@@ -1,0 +1,357 @@
+{
+  "owner": "alex.morgan@northwind.example",
+  "events": [
+    {
+      "event_id": "ev_001",
+      "title": "Ergo Supplies quarterly review",
+      "description": "Quarterly supplier review with Ergo Supplies: Q4 pricing, lead times and the EC-200 order.",
+      "start_time": "2026-10-30T10:00:00-07:00",
+      "end_time": "2026-10-30T10:45:00-07:00",
+      "location": "Video call",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "dana.whitfield@ergosupplies.example",
+        "luis.ortega@ergosupplies.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_002",
+      "title": "Lunch with Jordan",
+      "description": "Newsletter plans.",
+      "start_time": "2026-10-30T12:30:00-07:00",
+      "end_time": "2026-10-30T13:30:00-07:00",
+      "location": "Cafe Verde",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "jordan.kim@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_003",
+      "title": "Weekly sales pipeline review",
+      "description": "Weekly review of open deals. Notes go in the drive.",
+      "start_time": "2026-11-02T10:00:00-08:00",
+      "end_time": "2026-11-02T11:00:00-08:00",
+      "location": "Main room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "riley.chen@northwind.example",
+        "avery.patel@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_004",
+      "title": "Pinecrest Clinic delivery planning",
+      "description": "Agree a delivery window for the clinic's chair order.",
+      "start_time": "2026-11-02T14:00:00-08:00",
+      "end_time": "2026-11-02T14:30:00-08:00",
+      "location": "Phone",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "grace.liu@pinecrestclinic.example",
+        "casey.nguyen@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_005",
+      "title": "Team standup",
+      "description": "Daily sales and ops standup.",
+      "start_time": "2026-11-03T09:15:00-08:00",
+      "end_time": "2026-11-03T09:30:00-08:00",
+      "location": "Main room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "riley.chen@northwind.example",
+        "casey.nguyen@northwind.example",
+        "chris.diaz@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_006",
+      "title": "Order portal postmortem",
+      "description": "Review of the Oct 28 portal outage.",
+      "start_time": "2026-11-03T15:00:00-08:00",
+      "end_time": "2026-11-03T15:45:00-08:00",
+      "location": "Engineering room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "taylor.brooks@northwind.example",
+        "sam.okafor@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_007",
+      "title": "1:1 Alex / Avery",
+      "description": "Weekly one-on-one.",
+      "start_time": "2026-11-04T11:00:00-08:00",
+      "end_time": "2026-11-04T11:30:00-08:00",
+      "location": "Avery's office",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "avery.patel@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_008",
+      "title": "Q4 budget review",
+      "description": "Go through the sales operations budget lines.",
+      "start_time": "2026-11-04T14:00:00-08:00",
+      "end_time": "2026-11-04T15:00:00-08:00",
+      "location": "Finance room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "morgan.lee@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_009",
+      "title": "Team standup",
+      "description": "Daily sales and ops standup.",
+      "start_time": "2026-11-05T09:15:00-08:00",
+      "end_time": "2026-11-05T09:30:00-08:00",
+      "location": "Main room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "riley.chen@northwind.example",
+        "casey.nguyen@northwind.example",
+        "chris.diaz@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_010",
+      "title": "Novak Architects showroom visit",
+      "description": "Victor tries the EC-200 and two desk models before ordering.",
+      "start_time": "2026-11-05T13:00:00-08:00",
+      "end_time": "2026-11-05T14:30:00-08:00",
+      "location": "Northwind showroom",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "victor.novak@novakarchitects.example",
+        "riley.chen@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_011",
+      "title": "Call with Eriksen Dental",
+      "description": "Replacement desk and the standing desk quote.",
+      "start_time": "2026-11-06T10:00:00-08:00",
+      "end_time": "2026-11-06T10:30:00-08:00",
+      "location": "Phone",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "samuel.eriksen@example.org"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_012",
+      "title": "Board update prep",
+      "description": "Add Q4 pipeline numbers to the board update.",
+      "start_time": "2026-11-06T13:00:00-08:00",
+      "end_time": "2026-11-06T14:00:00-08:00",
+      "location": "Avery's office",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "avery.patel@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_013",
+      "title": "Interview: Office Trends Weekly",
+      "description": "Interview with Nora Quinn on supply delays. Tentative.",
+      "start_time": "2026-11-06T15:00:00-08:00",
+      "end_time": "2026-11-06T15:30:00-08:00",
+      "location": "Video call",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "nora.quinn@example.com"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_014",
+      "title": "Weekly sales pipeline review",
+      "description": "Weekly review of open deals. Notes go in the drive.",
+      "start_time": "2026-11-09T10:00:00-08:00",
+      "end_time": "2026-11-09T11:00:00-08:00",
+      "location": "Main room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "riley.chen@northwind.example",
+        "avery.patel@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_015",
+      "title": "Lunch with Dana (Ergo Supplies)",
+      "description": "Relationship lunch.",
+      "start_time": "2026-11-09T12:00:00-08:00",
+      "end_time": "2026-11-09T13:00:00-08:00",
+      "location": "Harbor Grill",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "dana.whitfield@ergosupplies.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_016",
+      "title": "FastFreight carrier review",
+      "description": "Review October on-time delivery with FastFreight.",
+      "start_time": "2026-11-09T15:00:00-08:00",
+      "end_time": "2026-11-09T15:45:00-08:00",
+      "location": "Video call",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "ken.adams@fastfreight.example",
+        "casey.nguyen@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_017",
+      "title": "Team standup",
+      "description": "Daily sales and ops standup.",
+      "start_time": "2026-11-10T09:15:00-08:00",
+      "end_time": "2026-11-10T09:30:00-08:00",
+      "location": "Main room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "riley.chen@northwind.example",
+        "casey.nguyen@northwind.example",
+        "chris.diaz@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_018",
+      "title": "Riverbend RFP working session",
+      "description": "Draft pricing and delivery plan for the RFP response.",
+      "start_time": "2026-11-10T11:00:00-08:00",
+      "end_time": "2026-11-10T13:00:00-08:00",
+      "location": "Main room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "riley.chen@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_019",
+      "title": "Security awareness training",
+      "description": "Annual training. Required for all staff.",
+      "start_time": "2026-11-10T15:00:00-08:00",
+      "end_time": "2026-11-10T16:00:00-08:00",
+      "location": "Training room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "drew.wilson@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_020",
+      "title": "Dentist appointment",
+      "description": "Personal.",
+      "start_time": "2026-11-11T08:00:00-08:00",
+      "end_time": "2026-11-11T09:00:00-08:00",
+      "location": "",
+      "participants": [
+        "alex.morgan@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_021",
+      "title": "1:1 Alex / Avery",
+      "description": "Weekly one-on-one.",
+      "start_time": "2026-11-11T11:00:00-08:00",
+      "end_time": "2026-11-11T11:30:00-08:00",
+      "location": "Avery's office",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "avery.patel@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_022",
+      "title": "Team offsite",
+      "description": "All-staff offsite. Agenda in the drive.",
+      "start_time": "2026-11-12T09:00:00-08:00",
+      "end_time": "2026-11-12T17:00:00-08:00",
+      "location": "Lakeside Center",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "priya.shah@northwind.example",
+        "avery.patel@northwind.example",
+        "jamie.park@northwind.example",
+        "riley.chen@northwind.example",
+        "jordan.kim@northwind.example",
+        "casey.nguyen@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_023",
+      "title": "Team standup",
+      "description": "Skipped for the offsite.",
+      "start_time": "2026-11-12T09:15:00-08:00",
+      "end_time": "2026-11-12T09:30:00-08:00",
+      "location": "Main room",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example",
+        "riley.chen@northwind.example",
+        "casey.nguyen@northwind.example",
+        "chris.diaz@northwind.example"
+      ],
+      "status": "canceled"
+    },
+    {
+      "event_id": "ev_024",
+      "title": "Brightline Studio install kickoff",
+      "description": "On-site kickoff for the workstation install.",
+      "start_time": "2026-11-13T10:00:00-08:00",
+      "end_time": "2026-11-13T11:00:00-08:00",
+      "location": "Brightline Studio, Oakland",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "mei.tanaka@brightline.example",
+        "jamie.park@northwind.example"
+      ],
+      "status": "confirmed"
+    },
+    {
+      "event_id": "ev_025",
+      "title": "Riverbend RFP deadline",
+      "description": "Responses due at 17:00.",
+      "start_time": "2026-11-13T16:00:00-08:00",
+      "end_time": "2026-11-13T17:00:00-08:00",
+      "location": "",
+      "participants": [
+        "alex.morgan@northwind.example",
+        "jamie.park@northwind.example"
+      ],
+      "status": "confirmed"
+    }
+  ]
+}

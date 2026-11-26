@@ -21,7 +21,7 @@ def main() -> None:
     """Serve the tools over HTTP."""
     server.run(
         transport="http",
-        host="0.0.0.0",
+        host="127.0.0.1",  # local only, like the internal servers
         port=8001,
         path="/api/mcp",  # Your custom path here
     )

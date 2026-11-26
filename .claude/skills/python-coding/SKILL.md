@@ -71,6 +71,10 @@ Do not add an underscore when the name is used by something other than a Python 
 - **Small functions with one job.** If a function needs a comment heading each section, split it.
 - **Pass dependencies in; don't reach for globals.** Take clients, stores, and configuration as
   parameters so code can be tested and so a session's state cannot leak into another.
+    Exception: an MCP tool server built on `hindsight-server-kit` keeps its `FastMCP` server and
+    `SessionStore` at module level, because the `fastmcp` CLI imports the module and never calls
+    `main()`. Tools read state only through `store.get()`, which picks the request's session, so no
+    session can see another's data.
 - **Fail loudly and specifically.** Raise a specific exception with a message that says what was
   wrong; never swallow exceptions with a bare `except:` or `except Exception: pass`.
 - **Keep runtime and offline code apart.** Code on the interposer's enforcement path must be

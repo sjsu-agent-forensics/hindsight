@@ -10,7 +10,7 @@ from langchain_openai import ChatOpenAI
 Provider = Literal["ollama", "anthropic", "openai"]
 
 _DEFAULT_MODELS: dict[Provider, str] = {
-    "ollama": "gemma4",
+    "ollama": "qwen3:4b",
     "anthropic": "claude-sonnet-5-5",
     "openai": "gpt-5-mini",
 }
