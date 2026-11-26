@@ -1,0 +1,41 @@
+[project]
+name = "interposer"
+version = "0.1.0"
+description = "MCP gateway between the agent and its tool servers: records, indexes and enforces"
+readme = "README.md"
+authors = [
+    { name = "ConlynPattison", email = "conlynrp@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "anyio>=4.15.0",
+    "httpx>=0.28.1",
+    "mcp>=1.24,<2",
+    "provenance",
+    "rule-engine",
+    "starlette>=1.7.0",
+    "trace-schema",
+    "uvicorn>=0.53.0",
+]
+
+[project.scripts]
+interposer = "interposer.main:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+trace-schema = { workspace = true }
+provenance = { workspace = true }
+rule-engine = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: runs real child processes and waits out real timeouts (deselect with -m 'not slow')",
+]

@@ -15,11 +15,22 @@ A [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/): one l
 virtual environment at the root, shared by every member.
 
 ```
+apps/agent/                    the ReAct agent hindsight protects; all its tools go through the interposer
+apps/interposer/               MCP gateway between the agent and its tool servers
+apps/launcher/                 runs the agent once under a hindsight session registered with the interposer
 apps/mcp-servers/              one directory per MCP tool server, each its own project (not members)
-packages/hindsight-core/       code shared by the demos (imported as `hindsight`)
+packages/hindsight-core/       code shared by the apps and demos (imported as `hindsight`)
 packages/hindsight-server-kit/ code shared by the internal MCP servers (not a member; see below)
-demos/                     one directory per demo, each its own package
+packages/provenance/           value-matching provenance index, used by the interposer (and replay)
+packages/rule-engine/          rule format, evaluation and trace replay, used by the interposer
+packages/trace-schema/         trace event format shared by the interposer and the agent
+demos/                         one directory per demo, each its own package
+rules/                         the interposer's rules, one JSON file per rule
+traces/                        session traces written at runtime, one directory per session (ignored)
 ```
+
+`apps/agent`, `apps/interposer` and `apps/launcher` are workspace members, listed by name in the
+root `pyproject.toml`.
 
 ### Planned structure
 
@@ -32,7 +43,7 @@ apps/
   agent/              LangGraph ReAct agent (MCP client + telemetry hooks)
   interposer/         MCP proxy: recorder, provenance index, policy enforcer
   forensics/          offline analysis: dependency graph, attribution, synthesis, validation
-  orchestrator/       starts sessions, assigns session IDs (could fold into agent at first)
+  launcher/           starts sessions, assigns session IDs, runs the agent
   mcp-servers/
     math/             one directory per tool server, incl. attack/test servers
     ...
@@ -70,6 +81,23 @@ uv run --package mcp-enabled-agent mcp-enabled-agent
 
 `mcp-enabled-agent` also needs the internal workspace servers running (see below).
 
+## Running the agent
+
+The agent in `apps/agent` reaches its tools only through the interposer, and only within a
+hindsight session, which the launcher registers for each run. It uses both tool servers: the
+interposer runs `math-server` itself, as each session's own child process, so only
+`weather-server` needs starting. Set both up once (see below), then start `weather-server` and the
+interposer, each in its own terminal, and run the agent through the launcher:
+
+```bash
+uv run --project apps/mcp-servers/weather weather-server   # http://127.0.0.1:8001/api/mcp
+uv run --package interposer interposer                     # http://127.0.0.1:8000
+uv run --package launcher launcher "What's (3 + 5) x 12? What's the weather in San Jose?"
+```
+
+See the READMEs in `apps/agent`, `apps/interposer` and `apps/launcher` for options and the
+interposer's checks.
+
 ## Running the tool servers
 
 MCP servers are not workspace members (see below), so they take `--project` rather than `--package`,
@@ -85,17 +113,18 @@ uv sync --project apps/mcp-servers/chat
 uv sync --project apps/mcp-servers/calendar
 ```
 
-The two use different transports, which is what decides whether you start them by hand:
+They use different transports, which is what decides whether you start them by hand:
 
-| server             | transport | address                         | started by      |
-| ------------------ | --------- | ------------------------------- | --------------- |
-| `math-server`      | stdio     | none -- stdin/stdout            | the demo        |
-| `weather-server`   | http      | `http://127.0.0.1:8001/api/mcp` | you, beforehand |
-| `email-server`     | http      | `http://127.0.0.1:8012/api/mcp` | you, beforehand |
-| `web-server`       | http      | `http://127.0.0.1:8013/api/mcp` | you, beforehand |
-| `drive-server`     | http      | `http://127.0.0.1:8014/api/mcp` | you, beforehand |
-| `chat-server`      | http      | `http://127.0.0.1:8016/api/mcp` | you, beforehand |
-| `calendar-server`  | http      | `http://127.0.0.1:8017/api/mcp` | you, beforehand |
+| server            | transport | address                         | started by                          |
+| ----------------- | --------- | ------------------------------- | ----------------------------------- |
+| `math-server`     | stdio     | none -- stdin/stdout            | the interposer                      |
+| `weather-server`  | http      | `http://127.0.0.1:8001/api/mcp` | you, beforehand                     |
+| `email-server`    | http      | `http://127.0.0.1:8012/api/mcp` | you, beforehand                     |
+| `web-server`      | http      | `http://127.0.0.1:8013/api/mcp` | you, beforehand                     |
+| `drive-server`    | http      | `http://127.0.0.1:8014/api/mcp` | you, beforehand                     |
+| `chat-server`     | http      | `http://127.0.0.1:8016/api/mcp` | you, beforehand                     |
+| `calendar-server` | http      | `http://127.0.0.1:8017/api/mcp` | you, beforehand                     |
+| `faults-server`   | stdio     | none -- stdin/stdout            | the interposer's Phase 4 check only |
 
 The internal servers (`email`, `web`, `drive`, `chat`, `calendar`) give the agent a synthetic
 workspace: it acts as the assistant of Alex Morgan at the fictional company Northwind. Their 35
@@ -112,9 +141,10 @@ server's `fixtures/benign.json` and the kit's shared people directory. Edit the 
 JSON, then rerun it; `python scripts/generate_workspace.py --check` (also covered by the kit's
 tests) fails when a fixture is out of date.
 
-`math-server` speaks stdio, so a client spawns it as a subprocess and you never start it yourself.
-A client must launch the console script out of that server's own `.venv`, which is what keeps the
-two incompatible `mcp` versions apart, so the `uv sync` above is what makes it work.
+`math-server` speaks stdio, so whoever uses it spawns it as a subprocess and you never start it
+yourself: the interposer does, once per session for `apps/agent`. It launches the console script
+out of that server's own `.venv`, which is what keeps the two incompatible `mcp` versions apart, so
+the `uv sync` above is what makes it work.
 
 To start every HTTP server at once, in one terminal, run the launcher from the repo root. It waits
 until each server is listening, prints their addresses, and stops them all on Ctrl-C:
@@ -266,6 +296,22 @@ Then confirm it runs:
 uv run --package <demo-name> <demo-name>
 ```
 
+## Testing
+
+Tests use pytest, one suite per project, each in that project's `tests/` folder with `pytest` in
+its `dev` dependency group. Run a workspace member's tests with `--package` and an MCP server's
+with `--project`, since servers have their own environments (see "The MCP server exception"):
+
+```bash
+uv run --package interposer pytest apps/interposer          # add -m "not slow" to skip process tests
+uv run --package trace-schema pytest packages/trace-schema
+uv run --package provenance pytest packages/provenance
+uv run --package rule-engine pytest packages/rule-engine
+```
+
+The interposer's tests start everything they need on free ports; only its process tests need
+`uv sync --project apps/mcp-servers/faults` first, and skip without it. See
+`apps/interposer/README.md` for what each test file covers.
 
 ## Formatting
 
